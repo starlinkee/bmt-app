@@ -17,6 +17,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            set -e
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             cd /var/www/bmt-app
@@ -37,3 +38,5 @@ jobs:
             fi
             npm run build
             pm2 reload bmt-app
+            sleep 3
+            pm2 show bmt-app | grep -q "status.*online" || { echo "App failed to start!"; pm2 logs bmt-app --err --lines 20 --nostream; exit 1; }
