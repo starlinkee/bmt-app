@@ -68,7 +68,7 @@ Prisma `datasource` → `url = env("DATABASE_URL")` → plik w `/app_data/databa
 
 ---
 
-## FAZA 5 — Generowanie Czynszów (Cykl Miesięczny)
+## FAZA 5 — Generowanie Czynszów (Cykl Miesięczny)s
 
 - `/finance` page z przyciskiem "Wystaw czynsze za [miesiąc/rok]"
 - Server Action `generateRents(month, year)`:
