@@ -1,11 +1,11 @@
 module.exports = {
   apps: [{
     name: 'bmt-app',
-    script: '.next/standalone/server.js',
+    script: 'node_modules/.bin/next',
+    args: 'start -p 3001',
     cwd: '/var/www/bmt-app',
-    env_production: {
+    env: {
       NODE_ENV: 'production',
-      PORT: 3001,
       HOSTNAME: '0.0.0.0'
     }
   }]
