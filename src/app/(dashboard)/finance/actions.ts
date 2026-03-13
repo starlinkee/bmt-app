@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { sendRentEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 
 const INVOICE_TYPE_OFFSET: Record<string, number> = {
@@ -49,6 +50,8 @@ export async function generateRents(month: number, year: number) {
     (c) => !existingTenantIds.has(c.tenantId)
   );
 
+  let emailsSent = 0;
+
   if (toCreate.length > 0) {
     await prisma.invoice.createMany({
       data: toCreate.map((c) => ({
@@ -60,6 +63,40 @@ export async function generateRents(month: number, year: number) {
         tenantId: c.tenantId,
       })),
     });
+
+    // Send emails to tenants that have an email address
+    const createdInvoices = await prisma.invoice.findMany({
+      where: { type: "RENT", month, year, tenantId: { in: toCreate.map((c) => c.tenantId) } },
+      include: {
+        tenant: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            property: { select: { address: true } },
+          },
+        },
+      },
+    });
+
+    const emailResults = await Promise.all(
+      createdInvoices
+        .filter((inv) => inv.tenant.email)
+        .map((inv) =>
+          sendRentEmail({
+            to: inv.tenant.email!,
+            firstName: inv.tenant.firstName,
+            lastName: inv.tenant.lastName,
+            invoiceNumber: inv.number,
+            amount: inv.amount,
+            month: inv.month,
+            year: inv.year,
+            address: inv.tenant.property.address,
+          })
+        )
+    );
+
+    emailsSent = emailResults.filter(Boolean).length;
   }
 
   revalidatePath("/finance");
@@ -69,6 +106,7 @@ export async function generateRents(month: number, year: number) {
     created: toCreate.length,
     skipped: existingTenantIds.size,
     total: activeContracts.length,
+    emailsSent,
   };
 }
 

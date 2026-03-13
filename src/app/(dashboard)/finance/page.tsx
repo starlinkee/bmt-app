@@ -67,7 +67,8 @@ export default function FinancePage() {
     } else {
       toast.success(
         `Wystawiono ${result.created} czynszów za ${MONTHS[month - 1]} ${year}.` +
-        (result.skipped > 0 ? ` Pominięto ${result.skipped} (już istniały).` : "")
+        (result.skipped > 0 ? ` Pominięto ${result.skipped} (już istniały).` : "") +
+        (result.emailsSent > 0 ? ` Wysłano ${result.emailsSent} e-maili.` : "")
       );
     }
     load();

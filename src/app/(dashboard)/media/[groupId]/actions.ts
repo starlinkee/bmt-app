@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { sendMediaEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import {
   writeInputValues,
@@ -77,7 +78,7 @@ export async function processSettlement(
     include: {
       property: {
         include: {
-          tenants: { select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true } },
+          tenants: { select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true, email: true } },
         },
       },
     },
@@ -132,6 +133,8 @@ export async function processSettlement(
     );
 
     let created = 0;
+    let emailsSent = 0;
+
     if (toCreate.length > 0) {
       const result = await prisma.invoice.createMany({
         data: toCreate.map((o) => ({
@@ -144,6 +147,27 @@ export async function processSettlement(
         })),
       });
       created = result.count;
+
+      // Send emails to tenants that have an email address
+      const tenantMap = new Map(group.property.tenants.map((t) => [t.id, t]));
+      const emailResults = await Promise.all(
+        toCreate
+          .filter((o) => tenantMap.get(o.tenantId)?.email)
+          .map((o) => {
+            const t = tenantMap.get(o.tenantId)!;
+            return sendMediaEmail({
+              to: t.email!,
+              firstName: t.firstName,
+              lastName: t.lastName,
+              invoiceNumber: buildInvoiceNumber(month, year, t.invoiceSeqNumber, "MEDIA"),
+              amount: o.amount,
+              month,
+              year,
+              address: group.property.address,
+            });
+          })
+      );
+      emailsSent = emailResults.filter(Boolean).length;
     }
 
     revalidatePath(`/media/${groupId}`);
@@ -153,6 +177,7 @@ export async function processSettlement(
       created,
       skipped: existingIds.size,
       outputs,
+      emailsSent,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Nieznany błąd";

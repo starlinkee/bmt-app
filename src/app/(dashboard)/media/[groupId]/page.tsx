@@ -103,7 +103,8 @@ export default function SettlementGroupPage() {
     } else {
       toast.success(
         `Utworzono ${result.created} faktur media za ${MONTHS[month - 1]} ${year}.` +
-        (result.skipped ? ` Pominięto ${result.skipped} (już istniały).` : "")
+        (result.skipped ? ` Pominięto ${result.skipped} (już istniały).` : "") +
+        (result.emailsSent ? ` Wysłano ${result.emailsSent} e-maili.` : "")
       );
     }
 
