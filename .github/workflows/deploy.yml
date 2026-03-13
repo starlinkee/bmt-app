@@ -17,8 +17,10 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             cd /var/www/bmt-app
-            git pull origin main
+            git pull origin master
             npm ci
             npm run build
             npx prisma migrate deploy
