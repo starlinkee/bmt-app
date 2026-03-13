@@ -6,51 +6,10 @@ on:
       - master
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        env:
-          DATABASE_URL: "file:./dummy.db"
-
-      - name: Build
-        run: npm run build
-
-      - name: Package build artifacts
-        run: |
-          tar czf deploy.tar.gz \
-            .next/standalone \
-            .next/static \
-            public \
-            prisma/schema.prisma \
-            prisma/migrations \
-            package.json \
-            ecosystem.config.js
-
-      - name: Copy artifacts to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          source: deploy.tar.gz
-          target: /tmp
-
-      - name: Deploy on VPS
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -60,26 +19,20 @@ jobs:
           script: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
             cd /var/www/bmt-app
-
-            # Save prisma checksum before deploy
+            # Save checksum before pull
+            OLD_LOCK=$(md5sum package-lock.json 2>/dev/null || echo "none")
             OLD_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "none")
-
-            # Extract new build
-            tar xzf /tmp/deploy.tar.gz --overwrite
-            rm /tmp/deploy.tar.gz
-
-            # Copy static files to standalone
-            cp -r .next/static .next/standalone/.next/
-            cp -r public .next/standalone/
-
+            git pull origin master
+            # Only npm ci if dependencies changed
+            NEW_LOCK=$(md5sum package-lock.json 2>/dev/null || echo "changed")
+            if [ "$OLD_LOCK" != "$NEW_LOCK" ]; then
+              npm ci
+            fi
+            npm run build
             # Only migrate if schema changed
             NEW_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "changed")
             if [ "$OLD_PRISMA" != "$NEW_PRISMA" ]; then
               npx prisma migrate deploy
             fi
-
-            # Restart pm2 - delete and start fresh to pick up new script path
-            pm2 delete bmt-app 2>/dev/null || true
-            pm2 start ecosystem.config.js --env production
+            pm2 reload bmt-app
