@@ -10,3 +10,101 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model Property {
+  id               Int               @id @default(autoincrement())
+  address          String
+  type             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenants          Tenant[]
+  settlementGroups SettlementGroup[]
+}
+
+model Tenant {
+  id                 Int           @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  bankAccountsAsText String        @default("")
+  propertyId         Int
+  property           Property      @relation(fields: [propertyId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  contracts          Contract[]
+  invoices           Invoice[]
+  transactions       Transaction[]
+}
+
+model Contract {
+  id         Int      @id @default(autoincrement())
+  rentAmount Float
+  startDate  DateTime
+  endDate    DateTime?
+  isActive   Boolean  @default(true)
+  tenantId   Int
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Invoice {
+  id             Int         @id @default(autoincrement())
+  type           InvoiceType
+  amount         Float
+  month          Int
+  year           Int
+  sourceFilePath String?
+  tenantId       Int
+  tenant         Tenant      @relation(fields: [tenantId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([tenantId, type, month, year], name: "unique_rent_per_period", map: "unique_rent_per_period")
+}
+
+model Transaction {
+  id          Int               @id @default(autoincrement())
+  type        TransactionType
+  status      TransactionStatus @default(UNMATCHED)
+  amount      Float
+  date        DateTime
+  title       String
+  bankAccount String?
+  description String?
+  tenantId    Int?
+  tenant      Tenant?           @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model SettlementGroup {
+  id               Int      @id @default(autoincrement())
+  name             String
+  spreadsheetId    String
+  inputMappingJSON String
+  outputMappingJSON String
+  propertyId       Int
+  property         Property @relation(fields: [propertyId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum InvoiceType {
+  RENT
+  MEDIA
+  OTHER
+}
+
+enum TransactionType {
+  BANK
+  CASH
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  MATCHED
+  UNMATCHED
+  MANUAL
+}
