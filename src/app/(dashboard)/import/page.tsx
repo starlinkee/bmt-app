@@ -70,7 +70,7 @@ export default function ImportPage() {
     toast.success(
       `Zaimportowano ${result.created} transakcji z ${result.bankName}. ` +
         `Dopasowane: ${result.matched}, Niedopasowane: ${result.unmatched}` +
-        (result.skipped > 0 ? `, Pominięte: ${result.skipped}` : "")
+        ((result.skipped ?? 0) > 0 ? `, Pominięte: ${result.skipped}` : "")
     );
     load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
