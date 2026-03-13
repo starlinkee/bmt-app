@@ -76,4 +76,6 @@ jobs:
               npx prisma migrate deploy
             fi
 
-            pm2 reload bmt-app
+            # Restart pm2 - delete and start fresh to pick up new script path
+            pm2 delete bmt-app 2>/dev/null || true
+            pm2 start ecosystem.config.js --env production
