@@ -20,8 +20,25 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             cd /var/www/bmt-app
+
+            # Save checksum before pull
+            OLD_LOCK=$(md5sum package-lock.json 2>/dev/null || echo "none")
+            OLD_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "none")
+
             git pull origin master
-            npm ci
+
+            # Only npm ci if dependencies changed
+            NEW_LOCK=$(md5sum package-lock.json 2>/dev/null || echo "changed")
+            if [ "$OLD_LOCK" != "$NEW_LOCK" ]; then
+              npm ci
+            fi
+
             npm run build
-            npx prisma migrate deploy
+
+            # Only migrate if schema changed
+            NEW_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "changed")
+            if [ "$OLD_PRISMA" != "$NEW_PRISMA" ]; then
+              npx prisma migrate deploy
+            fi
+
             pm2 reload bmt-app
