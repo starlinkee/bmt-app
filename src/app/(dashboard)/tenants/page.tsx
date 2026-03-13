@@ -25,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
   getTenants,
@@ -213,13 +214,23 @@ export default function TenantsPage() {
             {tenants.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-medium">
-                  {t.firstName} {t.lastName}
+                  <Link
+                    href={`/tenants/${t.id}`}
+                    className="hover:underline"
+                  >
+                    {t.firstName} {t.lastName}
+                  </Link>
                 </TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
                 <TableCell>{t.property.address}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
+                    <Link href={`/tenants/${t.id}`}>
+                      <Button variant="ghost" size="icon">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
