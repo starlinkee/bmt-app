@@ -190,7 +190,7 @@ export default function ReconcilePage() {
                     <TableCell>
                       <Select
                         value={selectedTenants[tx.id] || ""}
-                        onValueChange={(v) => handleTenantSelect(tx.id, v)}
+                        onValueChange={(v) => v && handleTenantSelect(tx.id, v)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Wybierz najemcę..." />
