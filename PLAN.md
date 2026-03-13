@@ -1,6 +1,6 @@
 # Plan: System Zarządzania Wynajmem (BMT App)
 
-## Stack
+## Stackk
 - Next.js 14 (App Router) + TypeScript
 - SQLite + Prisma ORM
 - Tailwind CSS + shadcn/ui
