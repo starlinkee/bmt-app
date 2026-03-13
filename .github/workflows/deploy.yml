@@ -23,6 +23,8 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "file:./dummy.db"
 
       - name: Build
         run: npm run build
@@ -33,8 +35,10 @@ jobs:
             .next/standalone \
             .next/static \
             public \
-            prisma \
-            package.json
+            prisma/schema.prisma \
+            prisma/migrations \
+            package.json \
+            ecosystem.config.js
 
       - name: Copy artifacts to VPS
         uses: appleboy/scp-action@v0.1.7
