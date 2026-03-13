@@ -56,6 +56,7 @@ export default function ContractsPage() {
   const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contract | null>(null);
+  const [noEndDate, setNoEndDate] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function load() {
@@ -97,11 +98,13 @@ export default function ContractsPage() {
 
   function openEdit(contract: Contract) {
     setEditing(contract);
+    setNoEndDate(!contract.endDate);
     setOpen(true);
   }
 
   function openCreate() {
     setEditing(null);
+    setNoEndDate(false);
     setOpen(true);
   }
 
@@ -115,7 +118,7 @@ export default function ContractsPage() {
         </Button>
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setNoEndDate(false); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -170,12 +173,25 @@ export default function ContractsPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="endDate">Data zakończenia</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="endDate">Data zakończenia</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      id="noEndDate"
+                      type="checkbox"
+                      checked={noEndDate}
+                      onChange={(e) => setNoEndDate(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="noEndDate" className="text-sm font-normal">Bezterminowa</Label>
+                  </div>
+                </div>
                 <Input
                   id="endDate"
                   name="endDate"
                   type="date"
                   defaultValue={editing?.endDate ? toInputDate(editing.endDate) : ""}
+                  disabled={noEndDate}
                   key={`ed-${editing?.id ?? "new"}`}
                 />
               </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight, RefreshCw, Plus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,8 +14,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
-import { getTenantDetail } from "./actions";
+import { getTenantDetail, createAdjustment } from "./actions";
 
 type TenantDetail = NonNullable<Awaited<ReturnType<typeof getTenantDetail>>>;
 
@@ -32,6 +43,115 @@ function formatDate(date: Date | string) {
     month: "2-digit",
     year: "numeric",
   }).format(new Date(date));
+}
+
+function AdjustmentDialog({
+  tenantId,
+  onSuccess,
+}: {
+  tenantId: number;
+  onSuccess: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount === 0) {
+      setError("Podaj prawidłową kwotę (różną od 0).");
+      return;
+    }
+    if (description.trim().length < 10) {
+      setError("Opis musi mieć minimum 10 znaków.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await createAdjustment({
+          tenantId,
+          amount: numAmount,
+          description,
+          date,
+        });
+        setOpen(false);
+        setAmount("");
+        setDescription("");
+        setDate(new Date().toISOString().slice(0, 10));
+        onSuccess();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Wystąpił błąd.");
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        <SlidersHorizontal className="mr-2 h-4 w-4" />
+        Dodaj korektę
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Dodaj korektę</DialogTitle>
+          <DialogDescription>
+            Kwota dodatnia (+) = umorzenie/nadpłata. Kwota ujemna (−) = kara/dopłata.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="adj-amount">Kwota (PLN)</Label>
+            <Input
+              id="adj-amount"
+              type="number"
+              step="0.01"
+              placeholder="np. 100 lub -50"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="adj-description">Opis (min. 10 znaków)</Label>
+            <Input
+              id="adj-description"
+              type="text"
+              placeholder="Powód korekty..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              minLength={10}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="adj-date">Data</Label>
+            <Input
+              id="adj-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
+          <DialogFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Zapisywanie..." : "Zapisz korektę"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function TenantDetailPage({
@@ -100,10 +220,13 @@ export default function TenantDetailPage({
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={isPending}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
-          Odśwież
-        </Button>
+        <div className="flex items-center gap-2">
+          <AdjustmentDialog tenantId={tenantId} onSuccess={load} />
+          <Button variant="outline" size="sm" onClick={load} disabled={isPending}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
+            Odśwież
+          </Button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -201,6 +324,11 @@ export default function TenantDetailPage({
                   <TableCell>
                     {entry.entryType === "invoice" ? (
                       <Badge variant="outline">{entry.invoiceType}</Badge>
+                    ) : entry.transactionType === "ADJUSTMENT" ? (
+                      <Badge variant="secondary" className="border-amber-300 bg-amber-50 text-amber-700">
+                        <SlidersHorizontal className="mr-1 h-3 w-3" />
+                        KOREKTA
+                      </Badge>
                     ) : (
                       <Badge variant="secondary">{entry.transactionType}</Badge>
                     )}
