@@ -129,7 +129,6 @@ export async function processSettlement(
           year,
           tenantId: o.tenantId,
         })),
-        skipDuplicates: true,
       });
       created = result.count;
     }

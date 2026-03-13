@@ -86,12 +86,12 @@ export function parseInputMapping(json: string): InputMapping {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (item: unknown) =>
+      (item: Record<string, unknown>) =>
         typeof item === "object" &&
         item !== null &&
-        "label" in item &&
-        "range" in item
-    );
+        typeof item.label === "string" &&
+        typeof item.range === "string"
+    ) as InputMapping;
   } catch {
     return [];
   }
@@ -102,12 +102,12 @@ export function parseOutputMapping(json: string): OutputMapping {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (item: unknown) =>
+      (item: Record<string, unknown>) =>
         typeof item === "object" &&
         item !== null &&
-        "tenantId" in item &&
-        "range" in item
-    );
+        typeof item.tenantId === "number" &&
+        typeof item.range === "string"
+    ) as OutputMapping;
   } catch {
     return [];
   }

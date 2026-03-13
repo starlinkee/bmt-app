@@ -231,10 +231,12 @@ export default function MediaPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/media/${g.id}`}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      render={<Link href={`/media/${g.id}`} />}
+                    >
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
