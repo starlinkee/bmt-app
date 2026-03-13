@@ -130,7 +130,7 @@ Prisma `datasource` → `url = env("DATABASE_URL")` → plik w `/app_data/databa
 
 ---
 
-## FAZA 10 — Deploy na VPS
+## FAZA 10 — Deploy na VPSd
 
 ### Przygotowanie (jednorazowo)
 1. SSH na serwer, `git clone` repo do `/var/www/bmt-app`
