@@ -197,11 +197,9 @@ export default function ImportPage() {
                     onChange={handleFileInput}
                     className="hidden"
                   />
-                  <Button variant="outline" asChild disabled={isPending}>
-                    <span>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Wybierz plik
-                    </span>
+                  <Button variant="outline" disabled={isPending}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Wybierz plik
                   </Button>
                 </label>
               </>
