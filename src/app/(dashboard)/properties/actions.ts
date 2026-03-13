@@ -11,6 +11,7 @@ export async function getProperties() {
 }
 
 export async function createProperty(formData: FormData) {
+  const name = formData.get("name") as string;
   const address = formData.get("address") as string;
   const type = formData.get("type") as string;
 
@@ -19,7 +20,7 @@ export async function createProperty(formData: FormData) {
   }
 
   await prisma.property.create({
-    data: { address: address.trim(), type: type.trim() },
+    data: { name: (name ?? "").trim(), address: address.trim(), type: type.trim() },
   });
 
   revalidatePath("/properties");
@@ -27,6 +28,7 @@ export async function createProperty(formData: FormData) {
 }
 
 export async function updateProperty(id: number, formData: FormData) {
+  const name = formData.get("name") as string;
   const address = formData.get("address") as string;
   const type = formData.get("type") as string;
 
@@ -36,11 +38,18 @@ export async function updateProperty(id: number, formData: FormData) {
 
   await prisma.property.update({
     where: { id },
-    data: { address: address.trim(), type: type.trim() },
+    data: { name: (name ?? "").trim(), address: address.trim(), type: type.trim() },
   });
 
   revalidatePath("/properties");
   return { success: true };
+}
+
+export async function getTenantsByProperty(propertyId: number) {
+  return prisma.tenant.findMany({
+    where: { propertyId },
+    orderBy: { lastName: "asc" },
+  });
 }
 
 export async function deleteProperty(id: number) {

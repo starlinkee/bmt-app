@@ -10,6 +10,14 @@ import {
   parseOutputMapping,
 } from "@/lib/sheetsEngine";
 
+function buildInvoiceNumber(month: number, year: number, seqNumber: number, type: string) {
+  const INVOICE_TYPE_OFFSET: Record<string, number> = { RENT: 0, MEDIA: 9, OTHER: 19 };
+  const mm = month.toString().padStart(2, "0");
+  const offset = INVOICE_TYPE_OFFSET[type] ?? 0;
+  const num = (seqNumber + offset).toString().padStart(3, "0");
+  return `${mm}/${year}/${num}`;
+}
+
 export async function getSettlementGroup(id: number) {
   return prisma.settlementGroup.findUnique({
     where: { id },
@@ -69,7 +77,7 @@ export async function processSettlement(
     include: {
       property: {
         include: {
-          tenants: { select: { id: true, firstName: true, lastName: true } },
+          tenants: { select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true } },
         },
       },
     },
@@ -119,11 +127,16 @@ export async function processSettlement(
       (o) => !existingIds.has(o.tenantId) && o.amount > 0
     );
 
+    const tenantSeqMap = new Map(
+      group.property.tenants.map((t) => [t.id, t.invoiceSeqNumber])
+    );
+
     let created = 0;
     if (toCreate.length > 0) {
       const result = await prisma.invoice.createMany({
         data: toCreate.map((o) => ({
           type: "MEDIA" as const,
+          number: buildInvoiceNumber(month, year, tenantSeqMap.get(o.tenantId) ?? 0, "MEDIA"),
           amount: o.amount,
           month,
           year,

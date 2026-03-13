@@ -25,16 +25,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   getProperties,
   createProperty,
   updateProperty,
   deleteProperty,
+  getTenantsByProperty,
 } from "./actions";
 
 type Property = Awaited<ReturnType<typeof getProperties>>[number];
+type Tenant = Awaited<ReturnType<typeof getTenantsByProperty>>[number];
 
 const PROPERTY_TYPES = ["Mieszkanie", "Lokal usługowy", "Garaż", "Inne"];
 
@@ -43,6 +45,9 @@ export default function PropertiesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Property | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [tenantsOpen, setTenantsOpen] = useState(false);
+  const [tenantsProperty, setTenantsProperty] = useState<Property | null>(null);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
 
   function load() {
     startTransition(async () => {
@@ -89,6 +94,13 @@ export default function PropertiesPage() {
     setOpen(true);
   }
 
+  async function openTenants(property: Property) {
+    setTenantsProperty(property);
+    setTenantsOpen(true);
+    const data = await getTenantsByProperty(property.id);
+    setTenants(data);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -107,6 +119,16 @@ export default function PropertiesPage() {
             </DialogTitle>
           </DialogHeader>
           <form action={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="name">Nazwa</Label>
+              <Input
+                id="name"
+                name="name"
+                defaultValue={editing?.name ?? ""}
+                placeholder="np. Mieszkanie na Mokotowie"
+                key={`name-${editing?.id ?? "new"}`}
+              />
+            </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="address">Adres</Label>
               <Input
@@ -139,12 +161,45 @@ export default function PropertiesPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={tenantsOpen} onOpenChange={(v) => { setTenantsOpen(v); if (!v) { setTenantsProperty(null); setTenants([]); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Najemcy — {tenantsProperty?.address}
+            </DialogTitle>
+          </DialogHeader>
+          {tenants.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Brak najemców dla tej nieruchomości.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Imię i nazwisko</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefon</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tenants.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">{t.firstName} {t.lastName}</TableCell>
+                    <TableCell>{t.email ?? "—"}</TableCell>
+                    <TableCell>{t.phone ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {properties.length === 0 ? (
         <p className="text-muted-foreground">Brak nieruchomości. Dodaj pierwszą.</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Nazwa</TableHead>
               <TableHead>Adres</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead className="text-center">Najemcy</TableHead>
@@ -154,9 +209,20 @@ export default function PropertiesPage() {
           <TableBody>
             {properties.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.address}</TableCell>
+                <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                <TableCell>{p.address}</TableCell>
                 <TableCell>{p.type}</TableCell>
-                <TableCell className="text-center">{p._count.tenants}</TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => openTenants(p)}
+                  >
+                    <Users className="h-4 w-4" />
+                    {p._count.tenants}
+                  </Button>
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(p)}>

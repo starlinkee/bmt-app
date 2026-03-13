@@ -3,13 +3,26 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+const INVOICE_TYPE_OFFSET: Record<string, number> = {
+  RENT: 0,
+  MEDIA: 9,
+  OTHER: 19,
+};
+
+function buildInvoiceNumber(month: number, year: number, seqNumber: number, type: string) {
+  const mm = month.toString().padStart(2, "0");
+  const offset = INVOICE_TYPE_OFFSET[type] ?? 0;
+  const num = (seqNumber + offset).toString().padStart(3, "0");
+  return `${mm}/${year}/${num}`;
+}
+
 export async function generateRents(month: number, year: number) {
   // Get all active contracts with tenant info
   const activeContracts = await prisma.contract.findMany({
     where: { isActive: true },
     include: {
       tenant: {
-        select: { id: true, firstName: true, lastName: true },
+        select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true },
       },
     },
   });
@@ -40,6 +53,7 @@ export async function generateRents(month: number, year: number) {
     await prisma.invoice.createMany({
       data: toCreate.map((c) => ({
         type: "RENT" as const,
+        number: buildInvoiceNumber(month, year, c.tenant.invoiceSeqNumber, "RENT"),
         amount: c.rentAmount,
         month,
         year,

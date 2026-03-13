@@ -13,6 +13,7 @@ datasource db {
 
 model Property {
   id               Int               @id @default(autoincrement())
+  name             String            @default("")
   address          String
   type             String
   createdAt        DateTime          @default(now())
@@ -28,6 +29,7 @@ model Tenant {
   email              String?
   phone              String?
   bankAccountsAsText String        @default("")
+  invoiceSeqNumber   Int           @default(0)
   propertyId         Int
   property           Property      @relation(fields: [propertyId], references: [id])
   createdAt          DateTime      @default(now())
@@ -52,6 +54,7 @@ model Contract {
 model Invoice {
   id             Int         @id @default(autoincrement())
   type           InvoiceType
+  number         String      @default("")
   amount         Float
   month          Int
   year           Int

@@ -29,10 +29,11 @@ jobs:
             if [ "$OLD_LOCK" != "$NEW_LOCK" ]; then
               npm ci
             fi
-            npm run build
-            # Only migrate if schema changed
+            # Only migrate + regenerate client if schema changed
             NEW_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "changed")
             if [ "$OLD_PRISMA" != "$NEW_PRISMA" ]; then
               npx prisma migrate deploy
+              npx prisma generate
             fi
+            npm run build
             pm2 reload bmt-app

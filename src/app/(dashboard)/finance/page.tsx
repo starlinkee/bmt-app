@@ -190,6 +190,7 @@ export default function FinancePage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Nr</TableHead>
                 <TableHead>Najemca</TableHead>
                 <TableHead>Nieruchomość</TableHead>
                 <TableHead className="text-right">Kwota</TableHead>
@@ -199,6 +200,7 @@ export default function FinancePage() {
             <TableBody>
               {rents.map((r) => (
                 <TableRow key={r.id}>
+                  <TableCell className="font-mono text-xs">{r.number || "—"}</TableCell>
                   <TableCell className="font-medium">
                     {r.tenant.firstName} {r.tenant.lastName}
                   </TableCell>

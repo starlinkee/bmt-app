@@ -32,6 +32,8 @@ export async function createTenant(formData: FormData) {
     return { error: "Nieruchomość jest wymagana." };
   }
 
+  const invoiceSeqNumber = Number(formData.get("invoiceSeqNumber")) || 0;
+
   await prisma.tenant.create({
     data: {
       firstName: firstName.trim(),
@@ -39,6 +41,7 @@ export async function createTenant(formData: FormData) {
       email: email?.trim() || null,
       phone: phone?.trim() || null,
       bankAccountsAsText: bankAccountsAsText.trim(),
+      invoiceSeqNumber,
       propertyId,
     },
   });
@@ -62,6 +65,8 @@ export async function updateTenant(id: number, formData: FormData) {
     return { error: "Nieruchomość jest wymagana." };
   }
 
+  const invoiceSeqNumber = Number(formData.get("invoiceSeqNumber")) || 0;
+
   await prisma.tenant.update({
     where: { id },
     data: {
@@ -70,6 +75,7 @@ export async function updateTenant(id: number, formData: FormData) {
       email: email?.trim() || null,
       phone: phone?.trim() || null,
       bankAccountsAsText: bankAccountsAsText.trim(),
+      invoiceSeqNumber,
       propertyId,
     },
   });
