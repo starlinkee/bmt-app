@@ -45,3 +45,4 @@ next-env.d.ts
 
 # database
 prisma/app_data/
+app_data/database/
