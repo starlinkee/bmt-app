@@ -1,4 +1,4 @@
-# BMT App
+# BMT Appp
 
 Aplikacja do zarządzania nieruchomościami, najemcami i rozliczeniami.
 
