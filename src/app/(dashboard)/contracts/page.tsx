@@ -146,18 +146,34 @@ export default function ContractsPage() {
               </Select>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="rentAmount">Kwota czynszu (PLN)</Label>
-              <Input
-                id="rentAmount"
-                name="rentAmount"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={editing?.rentAmount ?? ""}
-                required
-                key={`ra-${editing?.id ?? "new"}`}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="rentAmount">Kwota czynszu (PLN)</Label>
+                <Input
+                  id="rentAmount"
+                  name="rentAmount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={editing?.rentAmount ?? ""}
+                  required
+                  key={`ra-${editing?.id ?? "new"}`}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="invoiceSeqNumber">Nr porządkowy (rachunki)</Label>
+                <Input
+                  id="invoiceSeqNumber"
+                  name="invoiceSeqNumber"
+                  type="number"
+                  min={0}
+                  defaultValue={editing?.invoiceSeqNumber ?? 0}
+                  key={`seq-${editing?.id ?? "new"}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  np. 1 → /001 czynsz, /010 media
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -225,6 +241,7 @@ export default function ContractsPage() {
               <TableHead>Najemca</TableHead>
               <TableHead>Nieruchomość</TableHead>
               <TableHead>Czynsz</TableHead>
+              <TableHead className="text-center">Nr</TableHead>
               <TableHead>Od</TableHead>
               <TableHead>Do</TableHead>
               <TableHead>Status</TableHead>
@@ -239,6 +256,9 @@ export default function ContractsPage() {
                 </TableCell>
                 <TableCell>{c.tenant.property.address}</TableCell>
                 <TableCell>{formatCurrency(c.rentAmount)}</TableCell>
+                <TableCell className="text-center font-mono text-sm">
+                  {c.invoiceSeqNumber > 0 ? String(c.invoiceSeqNumber).padStart(3, "0") : "—"}
+                </TableCell>
                 <TableCell>{formatDate(c.startDate)}</TableCell>
                 <TableCell>{c.endDate ? formatDate(c.endDate) : "—"}</TableCell>
                 <TableCell>

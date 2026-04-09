@@ -1,0 +1,150 @@
+[
+  {
+    "label": "aktualna_data",
+    "range": "aktualna_data"
+  },
+  {
+    "label": "poprzednia_data",
+    "range": "poprzednia_data"
+  },
+  {
+    "label": "faktura_woda_brutto",
+    "range": "faktura_woda_brutto",
+    "group": "Faktura woda"
+  },
+  {
+    "label": "faktura_scieki_brutto",
+    "range": "faktura_scieki_brutto",
+    "group": "Faktura woda"
+  },
+  {
+    "label": "faktura_oplata_abonamentowa_brutto",
+    "range": "faktura_oplata_abonamentowa_brutto",
+    "group": "Faktura woda"
+  },
+  {
+    "label": "faktura_oplata_abonamentowa_scieki_brutto",
+    "range": "faktura_oplata_abonamentowa_scieki_brutto",
+    "group": "Faktura woda"
+  },
+  {
+    "label": "jp64_lokal1_woda_zimna_odczyt_aktualny",
+    "range": "jp64_lokal1_woda_zimna_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_lokal2_woda_zimna_odczyt_aktualny",
+    "range": "jp64_lokal2_woda_zimna_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_lokal1_woda_ciepla_odczyt_aktualny",
+    "range": "jp64_lokal1_woda_ciepla_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_lokal2_woda_ciepla_odczyt_aktualny",
+    "range": "jp64_lokal2_woda_ciepla_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_lokal1_centralne_ogrzewanie_odczyt_aktualny",
+    "range": "jp64_lokal1_centralne_ogrzewanie_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_lokal2_centralne_ogrzewanie_odczyt_aktualny",
+    "range": "jp64_lokal2_centralne_ogrzewanie_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal1_woda_zimna_odczyt_aktualny",
+    "range": "jp66_lokal1_woda_zimna_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal2_woda_zimna_odczyt_aktualny",
+    "range": "jp66_lokal2_woda_zimna_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal1_woda_ciepla_odczyt_aktualny",
+    "range": "jp66_lokal1_woda_ciepla_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal2_woda_ciepla_odczyt_aktualny",
+    "range": "jp66_lokal2_woda_ciepla_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal1_centralne_ogrzewanie_odczyt_aktualny",
+    "range": "jp66_lokal1_centralne_ogrzewanie_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp66_lokal2_centralne_ogrzewanie_odczyt_aktualny",
+    "range": "jp66_lokal2_centralne_ogrzewanie_odczyt_aktualny",
+    "group": "Odczyty liczników"
+  },
+  {
+    "label": "jp64_zuzycie_paliwa_gazowego_faktura_m3",
+    "range": "jp64_zuzycie_paliwa_gazowego_faktura_m3",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp64_zuzycie_paliwa_gazowego_faktura_kWh",
+    "range": "jp64_zuzycie_paliwa_gazowego_faktura_kWh",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp64_oplata_paliwo_gazowe_faktura_netto",
+    "range": "jp64_oplata_paliwo_gazowe_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp64_oplata_abonamentowa_faktura_netto",
+    "range": "jp64_oplata_abonamentowa_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp64_oplata_dystrybucyjna_stala_faktura_netto",
+    "range": "jp64_oplata_dystrybucyjna_stala_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp64_oplata_dystrybucyjna_zmienna_faktura_netto",
+    "range": "jp64_oplata_dystrybucyjna_zmienna_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_zuzycie_paliwa_gazowego_faktura_m3",
+    "range": "jp66_zuzycie_paliwa_gazowego_faktura_m3",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_zuzycie_paliwa_gazowego_faktura_kWh",
+    "range": "jp66_zuzycie_paliwa_gazowego_faktura_kWh",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_oplata_paliwo_gazowe_faktura_netto",
+    "range": "jp66_oplata_paliwo_gazowe_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_oplata_abonamentowa_faktura_netto",
+    "range": "jp66_oplata_abonamentowa_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_oplata_dystrybucyjna_stala_faktura_netto",
+    "range": "jp66_oplata_dystrybucyjna_stala_faktura_netto",
+    "group": "Faktura gaz"
+  },
+  {
+    "label": "jp66_oplata_dystrybucyjna_zmienna_faktura_netto",
+    "range": "jp66_oplata_dystrybucyjna_zmienna_faktura_netto",
+    "group": "Faktura gaz"
+  }
+]

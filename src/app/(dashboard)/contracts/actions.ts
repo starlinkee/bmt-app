@@ -24,6 +24,7 @@ export async function getTenantsForSelect() {
 export async function createContract(formData: FormData) {
   const tenantId = Number(formData.get("tenantId"));
   const rentAmount = parseFloat(formData.get("rentAmount") as string);
+  const invoiceSeqNumber = Number(formData.get("invoiceSeqNumber")) || 0;
   const startDate = formData.get("startDate") as string;
   const endDate = (formData.get("endDate") as string) || null;
   const isActive = formData.get("isActive") === "on";
@@ -36,6 +37,7 @@ export async function createContract(formData: FormData) {
     data: {
       tenantId,
       rentAmount,
+      invoiceSeqNumber,
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
       isActive,
@@ -49,6 +51,7 @@ export async function createContract(formData: FormData) {
 export async function updateContract(id: number, formData: FormData) {
   const tenantId = Number(formData.get("tenantId"));
   const rentAmount = parseFloat(formData.get("rentAmount") as string);
+  const invoiceSeqNumber = Number(formData.get("invoiceSeqNumber")) || 0;
   const startDate = formData.get("startDate") as string;
   const endDate = (formData.get("endDate") as string) || null;
   const isActive = formData.get("isActive") === "on";
@@ -62,6 +65,7 @@ export async function updateContract(id: number, formData: FormData) {
     data: {
       tenantId,
       rentAmount,
+      invoiceSeqNumber,
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
       isActive,

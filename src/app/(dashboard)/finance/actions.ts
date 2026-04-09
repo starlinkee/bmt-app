@@ -2,7 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { sendRentEmail } from "@/lib/email";
+import { writeNamedRanges, exportSheetAsPdf } from "@/lib/sheetsEngine";
+import { amountToWordsPLN } from "@/lib/numberWords";
 import { revalidatePath } from "next/cache";
+
+const MONTHS_PL = [
+  "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
+  "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
+];
 
 const INVOICE_TYPE_OFFSET: Record<string, number> = {
   RENT: 0,
@@ -23,7 +30,7 @@ export async function generateRents(month: number, year: number) {
     where: { isActive: true },
     include: {
       tenant: {
-        select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true },
+        select: { id: true, firstName: true, lastName: true },
       },
     },
   });
@@ -56,7 +63,7 @@ export async function generateRents(month: number, year: number) {
     await prisma.invoice.createMany({
       data: toCreate.map((c) => ({
         type: "RENT" as const,
-        number: buildInvoiceNumber(month, year, c.tenant.invoiceSeqNumber, "RENT"),
+        number: buildInvoiceNumber(month, year, c.invoiceSeqNumber, "RENT"),
         amount: c.rentAmount,
         month,
         year,
@@ -79,24 +86,72 @@ export async function generateRents(month: number, year: number) {
       },
     });
 
-    const emailResults = await Promise.all(
-      createdInvoices
-        .filter((inv) => inv.tenant.email)
-        .map((inv) =>
-          sendRentEmail({
-            to: inv.tenant.email!,
-            firstName: inv.tenant.firstName,
-            lastName: inv.tenant.lastName,
-            invoiceNumber: inv.number,
-            amount: inv.amount,
-            month: inv.month,
-            year: inv.year,
-            address: inv.tenant.property.address,
-          })
-        )
-    );
+    const appConfig = await prisma.appConfig.findUnique({ where: { id: 1 } });
+    const pdfEnabled =
+      appConfig &&
+      appConfig.rentInvoiceSpreadsheetId.trim() !== "" &&
+      process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
-    emailsSent = emailResults.filter(Boolean).length;
+    type RangeMapping = { range: string; value: string };
+    let rangeMapping: RangeMapping[] = [];
+    if (pdfEnabled) {
+      try {
+        rangeMapping = JSON.parse(appConfig!.rentInvoiceInputMappingJSON);
+      } catch {
+        rangeMapping = [];
+      }
+    }
+
+    const invoicesWithEmail = createdInvoices.filter((inv) => inv.tenant.email);
+
+    // Sequential: same sheet is reused per tenant, can't parallelize
+    for (const inv of invoicesWithEmail) {
+      let pdfAttachment: Buffer | undefined;
+
+      if (pdfEnabled && rangeMapping.length > 0) {
+        try {
+          const today = new Date();
+          const lastDay = new Date(inv.year, inv.month, 0).getDate();
+          const context: Record<string, string> = {
+            numer_rachunku: inv.number,
+            najemca: `${inv.tenant.firstName} ${inv.tenant.lastName}`,
+            adres: inv.tenant.property.address,
+            miesiac: MONTHS_PL[inv.month - 1],
+            rok: inv.year.toString(),
+            kwota: inv.amount.toLocaleString("pl-PL", { minimumFractionDigits: 2 }),
+            kwota_slownie: amountToWordsPLN(inv.amount),
+            data_wystawienia: today.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" }),
+            termin_platnosci: `${lastDay.toString().padStart(2, "0")}.${inv.month.toString().padStart(2, "0")}.${inv.year}`,
+          };
+
+          const values: Record<string, string> = {};
+          for (const { range, value } of rangeMapping) {
+            values[range] = value.replace(/\{(\w+)\}/g, (_, key) => context[key] ?? "");
+          }
+
+          await writeNamedRanges(appConfig!.rentInvoiceSpreadsheetId, values);
+          pdfAttachment = await exportSheetAsPdf(
+            appConfig!.rentInvoiceSpreadsheetId,
+            appConfig!.rentInvoicePdfGid || undefined
+          );
+        } catch (err) {
+          console.error(`[pdf] Błąd generowania PDF dla ${inv.number}:`, err);
+        }
+      }
+
+      const sent = await sendRentEmail({
+        to: inv.tenant.email!,
+        firstName: inv.tenant.firstName,
+        lastName: inv.tenant.lastName,
+        invoiceNumber: inv.number,
+        amount: inv.amount,
+        month: inv.month,
+        year: inv.year,
+        address: inv.tenant.property.address,
+        pdfAttachment,
+      });
+      if (sent) emailsSent++;
+    }
   }
 
   revalidatePath("/finance");

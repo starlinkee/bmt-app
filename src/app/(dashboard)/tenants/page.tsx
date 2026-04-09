@@ -157,21 +157,6 @@ export default function TenantsPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="invoiceSeqNumber">Nr porządkowy (rachunki)</Label>
-              <Input
-                id="invoiceSeqNumber"
-                name="invoiceSeqNumber"
-                type="number"
-                min={0}
-                defaultValue={editing?.invoiceSeqNumber ?? 0}
-                key={`seq-${editing?.id ?? "new"}`}
-              />
-              <p className="text-xs text-muted-foreground">
-                Stały numer najemcy używany w numeracji rachunków (np. 1 → /001 czynsz, /010 media)
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
               <Label htmlFor="propertyId">Nieruchomość</Label>
               <Select
                 name="propertyId"

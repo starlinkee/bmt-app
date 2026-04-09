@@ -13,7 +13,10 @@ function getAuth() {
 
   return new google.auth.GoogleAuth({
     credentials,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    scopes: [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/drive.readonly",
+    ],
   });
 }
 
@@ -79,6 +82,54 @@ export async function readOutputValues(
       amount: isNaN(amount) ? 0 : amount,
     };
   });
+}
+
+export async function writeNamedRanges(
+  spreadsheetId: string,
+  values: Record<string, string>
+): Promise<void> {
+  const sheets = getSheetsClient();
+  const data = Object.entries(values)
+    .filter(([, v]) => v !== "")
+    .map(([range, value]) => ({ range, values: [[value]] }));
+  if (data.length === 0) return;
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: { valueInputOption: "USER_ENTERED", data },
+  });
+}
+
+export async function exportSheetAsPdf(
+  spreadsheetId: string,
+  gid?: string
+): Promise<Buffer> {
+  const auth = getAuth();
+  const client = await auth.getClient();
+  const tokenResponse = await client.getAccessToken();
+  const token = tokenResponse.token;
+  if (!token) throw new Error("Nie udało się uzyskać tokenu dostępu.");
+
+  const params = new URLSearchParams({
+    format: "pdf",
+    portrait: "true",
+    fitw: "true",
+    gridlines: "false",
+    printtitle: "false",
+    sheetnames: "false",
+    pagenum: "UNDEFINED",
+  });
+  if (gid) params.set("gid", gid);
+
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?${params}`;
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Eksport PDF nieudany: ${response.status} ${response.statusText}`);
+  }
+
+  return Buffer.from(await response.arrayBuffer());
 }
 
 export function parseInputMapping(json: string): InputMapping {

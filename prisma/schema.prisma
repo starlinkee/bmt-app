@@ -12,14 +12,14 @@ datasource db {
 }
 
 model Property {
-  id               Int               @id @default(autoincrement())
-  name             String            @default("")
-  address          String
-  type             String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  tenants          Tenant[]
-  settlementGroups SettlementGroup[]
+  id                        Int                       @id @default(autoincrement())
+  name                      String                    @default("")
+  address                   String
+  type                      String
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
+  tenants                   Tenant[]
+  settlementGroupProperties SettlementGroupProperty[]
 }
 
 model Tenant {
@@ -29,7 +29,6 @@ model Tenant {
   email              String?
   phone              String?
   bankAccountsAsText String        @default("")
-  invoiceSeqNumber   Int           @default(0)
   propertyId         Int
   property           Property      @relation(fields: [propertyId], references: [id])
   createdAt          DateTime      @default(now())
@@ -40,12 +39,13 @@ model Tenant {
 }
 
 model Contract {
-  id         Int      @id @default(autoincrement())
-  rentAmount Float
-  startDate  DateTime
-  endDate    DateTime?
-  isActive   Boolean  @default(true)
-  tenantId   Int
+  id               Int      @id @default(autoincrement())
+  rentAmount       Float
+  invoiceSeqNumber Int      @default(0)
+  startDate        DateTime
+  endDate          DateTime?
+  isActive         Boolean  @default(true)
+  tenantId         Int
   tenant     Tenant   @relation(fields: [tenantId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -83,15 +83,30 @@ model Transaction {
 }
 
 model SettlementGroup {
-  id               Int      @id @default(autoincrement())
-  name             String
-  spreadsheetId    String
-  inputMappingJSON String
+  id                Int                       @id @default(autoincrement())
+  name              String
+  spreadsheetId     String
+  inputMappingJSON  String
   outputMappingJSON String
-  propertyId       Int
-  property         Property @relation(fields: [propertyId], references: [id])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  properties        SettlementGroupProperty[]
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+}
+
+model SettlementGroupProperty {
+  settlementGroupId Int
+  propertyId        Int
+  settlementGroup   SettlementGroup @relation(fields: [settlementGroupId], references: [id], onDelete: Cascade)
+  property          Property        @relation(fields: [propertyId], references: [id])
+
+  @@id([settlementGroupId, propertyId])
+}
+
+model AppConfig {
+  id                          Int    @id @default(1)
+  rentInvoiceSpreadsheetId    String @default("")
+  rentInvoiceInputMappingJSON String @default("[]")
+  rentInvoicePdfGid           String @default("")
 }
 
 enum InvoiceType {

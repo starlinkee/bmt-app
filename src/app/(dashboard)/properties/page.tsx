@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -25,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, FileText, BarChart2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   getProperties,
@@ -105,10 +106,20 @@ export default function PropertiesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Nieruchomości</h1>
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Dodaj
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/media" className={buttonVariants({ variant: "outline" })}>
+            <FileText className="mr-2 h-4 w-4" />
+            Media
+          </Link>
+          <Link href="/finance" className={buttonVariants({ variant: "outline" })}>
+            <BarChart2 className="mr-2 h-4 w-4" />
+            Wystawienie czynszu
+          </Link>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Dodaj
+          </Button>
+        </div>
       </div>
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>

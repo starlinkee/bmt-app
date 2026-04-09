@@ -39,8 +39,74 @@ function formatCurrency(n: number) {
 type Group = NonNullable<Awaited<ReturnType<typeof getSettlementGroup>>>;
 type Invoice = Awaited<ReturnType<typeof getGroupInvoices>>[number];
 
-type InputField = { label: string; range: string };
+type InputField = { label: string; range: string; group?: string };
 type OutputField = { tenantId: number; range: string };
+
+/** Converts underscore labels to readable Polish names.
+ *  e.g. jp64_lokal1_woda_zimna_odczyt_aktualny → JP 64 / Lokal 1 - Zimna woda (odczyt aktualny)
+ */
+function formatLabel(raw: string): string {
+  const parts = raw.split("_");
+  let i = 0;
+  const prefix: string[] = [];
+
+  // Address code: jp64 → JP 64, al10 → AL 10
+  if (i < parts.length && /^[a-z]+\d+$/i.test(parts[i])) {
+    prefix.push(
+      parts[i].replace(/^([a-z]+)(\d+)$/i, (_, l, d) => l.toUpperCase() + " " + d)
+    );
+    i++;
+  }
+
+  // Lokal number: lokal1 → Lokal 1
+  if (i < parts.length && /^lokal\d+$/i.test(parts[i])) {
+    prefix.push("Lokal " + parts[i].replace(/^lokal/i, ""));
+    i++;
+  }
+
+  const rest = parts.slice(i);
+  if (rest.length === 0) return prefix.join(" / ") || raw;
+
+  // Descriptor tail: odczyt/faktura/etc. only after at least one media word
+  const FIELD_WORDS = new Set([
+    "odczyt", "faktura", "zuzycie", "zużycie", "licznik",
+    "wartosc", "wartość", "kwota", "naliczenie",
+  ]);
+  const MEDIA_NOUNS = new Set(["woda", "gaz", "prad", "prąd", "cieplo", "ciepło", "energia"]);
+
+  let tailStart = rest.length;
+  for (let j = 0; j < rest.length; j++) {
+    if (j > 0 && FIELD_WORDS.has(rest[j].toLowerCase())) {
+      tailStart = j;
+      break;
+    }
+  }
+
+  const middle = rest.slice(0, tailStart);
+  const tail = rest.slice(tailStart);
+
+  let desc = "";
+  if (
+    middle.length === 2 &&
+    MEDIA_NOUNS.has(middle[0].toLowerCase()) &&
+    /[aeiy]$/i.test(middle[1])
+  ) {
+    // Reverse adjective-noun: woda_zimna → Zimna woda
+    desc = middle[1] + " " + middle[0];
+  } else if (middle.length > 0) {
+    desc = middle.join(" ");
+  }
+  if (desc) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+
+  const fieldDesc = tail.length > 0 ? "(" + tail.join(" ") + ")" : "";
+  const body = [desc, fieldDesc].filter(Boolean).join(" ");
+
+  const result: string[] = [];
+  if (prefix.length > 0) result.push(prefix.join(" / "));
+  if (body) result.push(body);
+
+  return result.join(" - ").trim() || raw;
+}
 
 export default function SettlementGroupPage() {
   const params = useParams();
@@ -85,7 +151,9 @@ export default function SettlementGroupPage() {
   })();
 
   const tenantMap = new Map(
-    group.property.tenants.map((t) => [t.id, `${t.firstName} ${t.lastName}`])
+    group.properties
+      .flatMap((p) => p.property.tenants)
+      .map((t) => [t.id, `${t.firstName} ${t.lastName}`])
   );
 
   async function handleProcess() {
@@ -118,12 +186,14 @@ export default function SettlementGroupPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" render={<Link href="/media" />}>
+        <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/media" />}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-2xl font-semibold">{group.name}</h1>
-          <p className="text-sm text-muted-foreground">{group.property.address}</p>
+          <p className="text-sm text-muted-foreground">
+            {group.properties.map((p) => p.property.address).join(", ")}
+          </p>
         </div>
       </div>
 
@@ -173,35 +243,44 @@ export default function SettlementGroupPage() {
             </div>
           </div>
 
-          {/* Dynamic input fields */}
-          {inputMapping.length > 0 && (
-            <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Dane wejściowe
-              </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {inputMapping.map((field) => (
-                  <div key={field.range} className="flex flex-col gap-1.5">
-                    <Label>{field.label}</Label>
-                    <Input
-                      type="text"
-                      value={inputValues[field.label] ?? ""}
-                      onChange={(e) =>
-                        setInputValues((prev) => ({
-                          ...prev,
-                          [field.label]: e.target.value,
-                        }))
-                      }
-                      placeholder={`Wartość dla: ${field.label}`}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Zakres: {field.range}
-                    </p>
+          {/* Dynamic input fields — grouped by optional "group" property */}
+          {inputMapping.length > 0 && (() => {
+            const groupOrder = [...new Set(inputMapping.map((f) => f.group ?? ""))];
+            const grouped = Object.fromEntries(
+              groupOrder.map((key) => [key, inputMapping.filter((f) => (f.group ?? "") === key)])
+            );
+            return (
+              <div className="flex flex-col gap-6">
+                {groupOrder.map((groupName) => (
+                  <div key={groupName || "__ungrouped"} className="flex flex-col gap-3">
+                    {groupName && (
+                      <h3 className="border-b border-border pb-1.5 text-sm font-semibold">
+                        {groupName}
+                      </h3>
+                    )}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {grouped[groupName].map((field) => (
+                        <div key={field.range} className="flex flex-col gap-1.5">
+                          <Label>{formatLabel(field.label)}</Label>
+                          <Input
+                            type="text"
+                            value={inputValues[field.label] ?? ""}
+                            onChange={(e) =>
+                              setInputValues((prev) => ({
+                                ...prev,
+                                [field.label]: e.target.value,
+                              }))
+                            }
+                            placeholder="Wartość"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Output mapping info */}
           {outputMapping.length > 0 && (

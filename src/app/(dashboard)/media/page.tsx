@@ -19,13 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -92,6 +85,10 @@ export default function MediaPage() {
     setOpen(true);
   }
 
+  const editingPropertyIds = new Set(
+    editing?.properties.map((p) => p.propertyId) ?? []
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -129,23 +126,29 @@ export default function MediaPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="propertyId">Nieruchomość</Label>
-              <Select
-                name="propertyId"
-                defaultValue={editing?.propertyId?.toString() ?? ""}
-                key={`p-${editing?.id ?? "new"}`}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Wybierz nieruchomość" />
-                </SelectTrigger>
-                <SelectContent>
-                  {properties.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>
-                      {p.address}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Nieruchomości</Label>
+              <div className="flex flex-col gap-2 rounded-md border border-input p-3">
+                {properties.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Brak nieruchomości</p>
+                ) : (
+                  properties.map((p) => (
+                    <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="propertyIds"
+                        value={p.id.toString()}
+                        defaultChecked={editingPropertyIds.has(p.id)}
+                        key={`p-${editing?.id ?? "new"}-${p.id}`}
+                        className="h-4 w-4 rounded border-input accent-primary"
+                      />
+                      <span className="text-sm">{p.address}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Zaznacz co najmniej jedną nieruchomość
+              </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -170,9 +173,9 @@ export default function MediaPage() {
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
                 defaultValue={
                   editing?.inputMappingJSON ??
-                  '[{"label": "Odczyt wody", "range": "Arkusz1!A1"}]'
+                  '[{"label": "jp64_lokal1_woda_zimna_odczyt_aktualny", "range": "Arkusz1!A1", "group": "Odczyty Liczników Woda"}]'
                 }
-                placeholder='[{"label": "Odczyt wody", "range": "Arkusz1!A1"}]'
+                placeholder='[{"label": "jp64_lokal1_woda_zimna_odczyt_aktualny", "range": "Arkusz1!A1", "group": "Odczyty Liczników Woda"}]'
                 key={`im-${editing?.id ?? "new"}`}
               />
               <p className="text-xs text-muted-foreground">
@@ -216,7 +219,7 @@ export default function MediaPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nazwa</TableHead>
-              <TableHead>Nieruchomość</TableHead>
+              <TableHead>Nieruchomości</TableHead>
               <TableHead>ID arkusza</TableHead>
               <TableHead className="w-32" />
             </TableRow>
@@ -225,7 +228,9 @@ export default function MediaPage() {
             {groups.map((g) => (
               <TableRow key={g.id}>
                 <TableCell className="font-medium">{g.name}</TableCell>
-                <TableCell>{g.property.address}</TableCell>
+                <TableCell>
+                  {g.properties.map((p) => p.property.address).join(", ")}
+                </TableCell>
                 <TableCell className="max-w-[200px] truncate font-mono text-xs">
                   {g.spreadsheetId}
                 </TableCell>
@@ -234,6 +239,7 @@ export default function MediaPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      nativeButton={false}
                       render={<Link href={`/media/${g.id}`} />}
                     >
                       <ArrowRight className="h-4 w-4" />

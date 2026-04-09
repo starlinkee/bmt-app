@@ -1,30 +1,54 @@
-# BMT Appp
+# BMT App
 
 Aplikacja do zarządzania nieruchomościami, najemcami i rozliczeniami.
 
 ## Stack
 
-- Next.js (App Router), Prisma + SQLite, Tailwind CSS + shadcn/ui
-- Google Sheets API (rozliczenia mediów)
-- Deploy: GitHub Actions → VPS (pm2)
+- Next.js 16 (App Router), TypeScript, Prisma + SQLite, Tailwind CSS + shadcn/ui
+- Google Sheets API v4 (rozliczenia mediów), Gmail SMTP (Nodemailer)
+- NextAuth (Credentials, jedno hasło, JWT 30 dni)
+- Deploy: GitHub Actions -> VPS (pm2)
 
-## Numeracja rachunków
+## Struktura projektu
 
-Każdy najemca ma stały **numer porządkowy** (`invoiceSeqNumber` w modelu `Tenant`), ustawiany ręcznie w formularzu edycji najemcy. Ten numer jest używany do generowania numeru rachunku (`Invoice.number`).
+- `src/app/(dashboard)/` - chronione strony (properties, tenants, contracts, finance, media, import)
+- `src/lib/` - logika biznesowa (auth, email, csvParser, matcher, sheetsEngine, balance, statement)
+- `src/components/ui/` - shadcn/ui, `sidebar.tsx`, `invoice-status-badge.tsx`
+- `app_data/` - baza SQLite + uploady (poza Git)
+
+## Model finansowy - "Skarbonka"
+
+```
+Saldo = Suma(Transakcje) - Suma(Rachunki)
+```
+
+Brak parowania 1:1. Status oplacenia rachunkow symulowany (najstarsze pokrywane najpierw).
+
+## Numeracja rachunkow
+
+Każda **umowa** ma numer porządkowy (`invoiceSeqNumber` w modelu `Contract`), ustawiany ręcznie w formularzu edycji umowy. Ten numer jest używany do generowania numeru rachunku (`Invoice.number`).
 
 ### Format: `MM/YYYY/NNN`
 
 `NNN` = `invoiceSeqNumber` + offset typu:
 
-| Typ     | Offset | Najemca seq=1 | Najemca seq=2 |
-|---------|--------|----------------|----------------|
-| RENT    | 0      | /001           | /002           |
-| MEDIA   | 9      | /010           | /011           |
-| OTHER   | 19     | /020           | /021           |
+| Typ     | Offset | Umowa seq=1 | Umowa seq=2 |
+|---------|--------|-------------|-------------|
+| RENT    | 0      | /001        | /002        |
+| MEDIA   | 9      | /010        | /011        |
+| OTHER   | 19     | /020        | /021        |
 
-Każdy najemca zawsze dostaje ten sam numer niezależnie od miesiąca. Offsety są hardcoded w `INVOICE_TYPE_OFFSET`.
+Każda umowa ma swój stały numer niezależnie od miesiąca. Offsety są hardcoded w `INVOICE_TYPE_OFFSET`.
 
 ### Implementacja
 
 - `buildInvoiceNumber()` w `finance/actions.ts` i `media/[groupId]/actions.ts`
 - Numer nadawany automatycznie przy `generateRents` (czynsz) i `processSettlement` (media)
+
+## Import CSV
+
+Wspierane banki: PKO BP, mBank, Santander, ING, Millenium. Dopasowanie po numerze konta (normalizacja: spacje, myslniki, prefiks PL).
+
+## Google Sheets
+
+Grupy rozliczeniowe z mapowaniami input/output (JSON). Workflow: zapis odczytow -> przeliczenie -> odczyt kwot -> rachunki MEDIA -> e-maile.

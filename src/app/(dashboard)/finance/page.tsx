@@ -81,7 +81,7 @@ export default function FinancePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Finanse</h1>
+      <h1 className="text-2xl font-semibold">Wystawienie czynszu</h1>
 
       {/* Stats cards */}
       {stats && (

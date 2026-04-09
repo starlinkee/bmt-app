@@ -23,11 +23,15 @@ export async function getSettlementGroup(id: number) {
   return prisma.settlementGroup.findUnique({
     where: { id },
     include: {
-      property: {
+      properties: {
         include: {
-          tenants: {
-            select: { id: true, firstName: true, lastName: true },
-            orderBy: { lastName: "asc" },
+          property: {
+            include: {
+              tenants: {
+                select: { id: true, firstName: true, lastName: true },
+                orderBy: { lastName: "asc" },
+              },
+            },
           },
         },
       },
@@ -39,9 +43,13 @@ export async function getGroupInvoices(groupId: number, month: number, year: num
   const group = await prisma.settlementGroup.findUnique({
     where: { id: groupId },
     select: {
-      property: {
+      properties: {
         select: {
-          tenants: { select: { id: true } },
+          property: {
+            select: {
+              tenants: { select: { id: true } },
+            },
+          },
         },
       },
     },
@@ -49,7 +57,7 @@ export async function getGroupInvoices(groupId: number, month: number, year: num
 
   if (!group) return [];
 
-  const tenantIds = group.property.tenants.map((t) => t.id);
+  const tenantIds = group.properties.flatMap((p) => p.property.tenants.map((t) => t.id));
 
   return prisma.invoice.findMany({
     where: {
@@ -76,9 +84,26 @@ export async function processSettlement(
   const group = await prisma.settlementGroup.findUnique({
     where: { id: groupId },
     include: {
-      property: {
+      properties: {
         include: {
-          tenants: { select: { id: true, firstName: true, lastName: true, invoiceSeqNumber: true, email: true } },
+          property: {
+            include: {
+              tenants: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  contracts: {
+                    where: { isActive: true },
+                    select: { invoiceSeqNumber: true },
+                    orderBy: { startDate: "desc" },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -93,26 +118,32 @@ export async function processSettlement(
     return { error: "Brak mapowania wyjściowego (outputMapping). Skonfiguruj grupę." };
   }
 
-  // Validate that all output tenantIds belong to this property
-  const propertyTenantIds = new Set(group.property.tenants.map((t) => t.id));
+  const allTenants = group.properties.flatMap((p) => p.property.tenants);
+  const propertyTenantIds = new Set(allTenants.map((t) => t.id));
+
   const invalidTenants = outputMapping.filter((m) => !propertyTenantIds.has(m.tenantId));
   if (invalidTenants.length > 0) {
-    return { error: `Najemcy o ID ${invalidTenants.map((t) => t.tenantId).join(", ")} nie należą do tej nieruchomości.` };
+    return {
+      error: `Najemcy o ID ${invalidTenants.map((t) => t.tenantId).join(", ")} nie należą do żadnej nieruchomości w tej grupie.`,
+    };
   }
 
+  // Build map from tenantId to property address for emails
+  const tenantAddressMap = new Map(
+    group.properties.flatMap((p) =>
+      p.property.tenants.map((t) => [t.id, p.property.address])
+    )
+  );
+
   try {
-    // 1. Write input values to Google Sheets
     if (inputMapping.length > 0 && Object.keys(inputValues).length > 0) {
       await writeInputValues(group.spreadsheetId, inputMapping, inputValues);
     }
 
-    // 2. Trigger recalculation
     await triggerRecalc(group.spreadsheetId);
 
-    // 3. Read output values
     const outputs = await readOutputValues(group.spreadsheetId, outputMapping);
 
-    // 4. Create MEDIA invoices (skip duplicates)
     const existing = await prisma.invoice.findMany({
       where: {
         type: "MEDIA",
@@ -128,9 +159,7 @@ export async function processSettlement(
       (o) => !existingIds.has(o.tenantId) && o.amount > 0
     );
 
-    const tenantSeqMap = new Map(
-      group.property.tenants.map((t) => [t.id, t.invoiceSeqNumber])
-    );
+    const tenantSeqMap = new Map(allTenants.map((t) => [t.id, t.contracts[0]?.invoiceSeqNumber ?? 0]));
 
     let created = 0;
     let emailsSent = 0;
@@ -148,8 +177,7 @@ export async function processSettlement(
       });
       created = result.count;
 
-      // Send emails to tenants that have an email address
-      const tenantMap = new Map(group.property.tenants.map((t) => [t.id, t]));
+      const tenantMap = new Map(allTenants.map((t) => [t.id, t]));
       const emailResults = await Promise.all(
         toCreate
           .filter((o) => tenantMap.get(o.tenantId)?.email)
@@ -159,11 +187,11 @@ export async function processSettlement(
               to: t.email!,
               firstName: t.firstName,
               lastName: t.lastName,
-              invoiceNumber: buildInvoiceNumber(month, year, t.invoiceSeqNumber, "MEDIA"),
+              invoiceNumber: buildInvoiceNumber(month, year, t.contracts[0]?.invoiceSeqNumber ?? 0, "MEDIA"),
               amount: o.amount,
               month,
               year,
-              address: group.property.address,
+              address: tenantAddressMap.get(o.tenantId) ?? "",
             });
           })
       );

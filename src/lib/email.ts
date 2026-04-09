@@ -30,6 +30,7 @@ export interface RentEmailData {
   month: number;
   year: number;
   address: string;
+  pdfAttachment?: Buffer;
 }
 
 export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
@@ -68,8 +69,26 @@ export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
 </body>
 </html>`;
 
+  const mailOptions: Parameters<typeof transporter.sendMail>[0] = {
+    from: `BMT <${process.env.GMAIL_USER}>`,
+    to: data.to,
+    subject,
+    html,
+  };
+
+  if (data.pdfAttachment) {
+    const safeNumber = data.invoiceNumber.replace(/\//g, "-");
+    mailOptions.attachments = [
+      {
+        filename: `Rachunek_${safeNumber}.pdf`,
+        content: data.pdfAttachment,
+        contentType: "application/pdf",
+      },
+    ];
+  }
+
   try {
-    await transporter.sendMail({ from: `BMT <${process.env.GMAIL_USER}>`, to: data.to, subject, html });
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (err) {
     console.error(`[email] Błąd wysyłki czynszu do ${data.to}:`, err);
