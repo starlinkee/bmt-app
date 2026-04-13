@@ -107,11 +107,11 @@ export default function PropertiesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Najem</h1>
         <div className="flex gap-2">
-          <Link href="/media" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/media" className={buttonVariants({ variant: "secondary" })}>
             <FileText className="mr-2 h-4 w-4" />
             Media
           </Link>
-          <Link href="/finance" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/finance" className={buttonVariants({ variant: "secondary" })}>
             <BarChart2 className="mr-2 h-4 w-4" />
             Wystawienie czynszu
           </Link>
