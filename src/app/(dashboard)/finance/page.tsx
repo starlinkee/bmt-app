@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,9 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Receipt, CheckCircle2, AlertCircle } from "lucide-react";
+import { Receipt, CheckCircle2, AlertCircle, Mail, MailX } from "lucide-react";
 import { toast } from "sonner";
-import { generateRents, getGeneratedRents, getFinanceStats } from "./actions";
+import { generateRents, getGeneratedRents, getFinanceStats, getRentPreview } from "./actions";
 
 const MONTHS = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -34,6 +42,7 @@ function formatCurrency(n: number) {
 
 type RentInvoice = Awaited<ReturnType<typeof getGeneratedRents>>[number];
 type Stats = Awaited<ReturnType<typeof getFinanceStats>>;
+type PreviewTenant = Awaited<ReturnType<typeof getRentPreview>>[number];
 
 export default function FinancePage() {
   const now = new Date();
@@ -42,6 +51,9 @@ export default function FinancePage() {
   const [rents, setRents] = useState<RentInvoice[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [preview, setPreview] = useState<PreviewTenant[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   function load() {
     startTransition(async () => {
@@ -56,7 +68,16 @@ export default function FinancePage() {
 
   useEffect(() => { load(); }, [month, year]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleGenerate() {
+  async function handleClickGenerate() {
+    setLoadingPreview(true);
+    const data = await getRentPreview(month, year);
+    setPreview(data);
+    setLoadingPreview(false);
+    setConfirmOpen(true);
+  }
+
+  async function handleConfirm() {
+    setConfirmOpen(false);
     const result = await generateRents(month, year);
     if (result.error) {
       toast.error(result.error);
@@ -74,14 +95,74 @@ export default function FinancePage() {
     load();
   }
 
-  // Generate year options: current year -1 to +1
   const yearOptions = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
-
   const totalAmount = rents.reduce((sum, r) => sum + r.amount, 0);
+  const withEmail = preview.filter((t) => t.email);
+  const withoutEmail = preview.filter((t) => !t.email);
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Wystawienie czynszu</h1>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Potwierdź wystawienie czynszów</DialogTitle>
+            <DialogDescription>
+              Zostaną wystawione czynsze za <strong>{MONTHS[month - 1]} {year}</strong> dla {preview.length} najemców.
+            </DialogDescription>
+          </DialogHeader>
+
+          {preview.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Wszyscy najemcy mają już wystawione czynsze za ten okres.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {withEmail.length > 0 && (
+                <div>
+                  <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+                    <Mail className="h-4 w-4" />
+                    Otrzymają e-mail ({withEmail.length})
+                  </div>
+                  <ul className="flex flex-col gap-0.5 pl-1">
+                    {withEmail.map((t) => (
+                      <li key={t.id} className="text-sm">
+                        {t.name} <span className="text-muted-foreground">— {t.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {withoutEmail.length > 0 && (
+                <div>
+                  <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                    <MailX className="h-4 w-4" />
+                    Bez e-maila ({withoutEmail.length})
+                  </div>
+                  <ul className="flex flex-col gap-0.5 pl-1">
+                    {withoutEmail.map((t) => (
+                      <li key={t.id} className="text-sm text-muted-foreground">
+                        {t.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Anuluj
+            </Button>
+            <Button onClick={handleConfirm} disabled={preview.length === 0}>
+              <Receipt className="mr-2 h-4 w-4" />
+              Wystaw
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats cards */}
       {stats && (
@@ -164,9 +245,9 @@ export default function FinancePage() {
               </Select>
             </div>
 
-            <Button onClick={handleGenerate} disabled={isPending}>
+            <Button onClick={handleClickGenerate} disabled={isPending || loadingPreview}>
               <Receipt className="mr-2 h-4 w-4" />
-              Wystaw czynsze za {MONTHS[month - 1]} {year}
+              {loadingPreview ? "Ładowanie..." : `Wystaw czynsze za ${MONTHS[month - 1]} ${year}`}
             </Button>
           </div>
         </CardContent>
@@ -182,7 +263,7 @@ export default function FinancePage() {
       ) : (
         <div>
           <div className="mb-3 flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <CheckCircle2 className="h-5 w-5" />
             <span className="font-medium">
               Wystawione czynsze za {MONTHS[month - 1]} {year}
             </span>

@@ -165,6 +165,37 @@ export async function generateRents(month: number, year: number) {
   };
 }
 
+export async function getRentPreview(month: number, year: number) {
+  const activeContracts = await prisma.contract.findMany({
+    where: { isActive: true },
+    include: {
+      tenant: {
+        select: { id: true, firstName: true, lastName: true, email: true },
+      },
+    },
+  });
+
+  const existingInvoices = await prisma.invoice.findMany({
+    where: {
+      type: "RENT",
+      month,
+      year,
+      tenantId: { in: activeContracts.map((c) => c.tenantId) },
+    },
+    select: { tenantId: true },
+  });
+
+  const existingTenantIds = new Set(existingInvoices.map((i) => i.tenantId));
+
+  return activeContracts
+    .filter((c) => !existingTenantIds.has(c.tenantId))
+    .map((c) => ({
+      id: c.tenantId,
+      name: `${c.tenant.firstName} ${c.tenant.lastName}`,
+      email: c.tenant.email,
+    }));
+}
+
 export async function getGeneratedRents(month: number, year: number) {
   return prisma.invoice.findMany({
     where: { type: "RENT", month, year },
