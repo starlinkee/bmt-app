@@ -2,6 +2,8 @@
 
 Aplikacja do zarządzania nieruchomościami, najemcami i rozliczeniami.
 
+Po każdej zmianie rób commit i push.
+
 ## Stack
 
 - Next.js 16 (App Router), TypeScript, Prisma + SQLite, Tailwind CSS + shadcn/ui

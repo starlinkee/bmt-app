@@ -5,8 +5,15 @@ import { revalidatePath } from "next/cache";
 
 export async function getTenants() {
   return prisma.tenant.findMany({
-    include: { property: true },
+    include: { property: true, _count: { select: { contracts: { where: { isActive: true } } } } },
     orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getContractsByTenant(tenantId: number) {
+  return prisma.contract.findMany({
+    where: { tenantId, isActive: true },
+    orderBy: { startDate: "desc" },
   });
 }
 

@@ -105,7 +105,7 @@ export default function PropertiesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Nieruchomości</h1>
+        <h1 className="text-2xl font-semibold">Najem</h1>
         <div className="flex gap-2">
           <Link href="/media" className={buttonVariants({ variant: "outline" })}>
             <FileText className="mr-2 h-4 w-4" />

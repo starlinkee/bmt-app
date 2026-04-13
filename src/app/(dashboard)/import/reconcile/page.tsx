@@ -28,12 +28,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Link2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getUnmatchedTransactions,
   getAllTenants,
   reconcileTransaction,
+  dismissTransaction,
 } from "../actions";
 
 function formatCurrency(n: number) {
@@ -54,6 +55,10 @@ export default function ReconcilePage() {
     tenantId: number;
     tenantName: string;
     bankAccount: string;
+  } | null>(null);
+  const [dismissDialog, setDismissDialog] = useState<{
+    txId: number;
+    title: string;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -101,6 +106,17 @@ export default function ReconcilePage() {
       // No bank account to save, just assign
       doReconcile(tx.id, tenantId, false);
     }
+  }
+
+  async function doDismiss(txId: number) {
+    const result = await dismissTransaction(txId);
+    setDismissDialog(null);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Transakcja odrzucona.");
+    setTransactions((prev) => prev.filter((t) => t.id !== txId));
   }
 
   async function doReconcile(
@@ -205,14 +221,25 @@ export default function ReconcilePage() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        disabled={!selectedTenants[tx.id]}
-                        onClick={() => handleAssign(tx)}
-                      >
-                        <Link2 className="mr-1 h-3 w-3" />
-                        Przypisz
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          disabled={!selectedTenants[tx.id]}
+                          onClick={() => handleAssign(tx)}
+                        >
+                          <Link2 className="mr-1 h-3 w-3" />
+                          Przypisz
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setDismissDialog({ txId: tx.id, title: tx.title })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -258,6 +285,41 @@ export default function ReconcilePage() {
               }
             >
               Tak, zapamiętaj
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation dialog for dismissing transaction */}
+      <Dialog
+        open={!!dismissDialog}
+        onOpenChange={(open) => !open && setDismissDialog(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Odrzucić transakcję?</DialogTitle>
+            <DialogDescription>
+              Czy na pewno chcesz odrzucić transakcję{" "}
+              <span className="font-medium">&quot;{dismissDialog?.title}&quot;</span>?
+              <br />
+              Transakcja nie będzie już widoczna na liście do uzgodnienia.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDismissDialog(null)}
+            >
+              Anuluj
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                dismissDialog && doDismiss(dismissDialog.txId)
+              }
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Odrzuć
             </Button>
           </DialogFooter>
         </DialogContent>

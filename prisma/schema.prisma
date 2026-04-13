@@ -125,4 +125,5 @@ enum TransactionStatus {
   MATCHED
   UNMATCHED
   MANUAL
+  DISMISSED
 }

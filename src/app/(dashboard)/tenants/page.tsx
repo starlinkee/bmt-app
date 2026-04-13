@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   getTenants,
@@ -34,10 +34,12 @@ import {
   createTenant,
   updateTenant,
   deleteTenant,
+  getContractsByTenant,
 } from "./actions";
 
 type Tenant = Awaited<ReturnType<typeof getTenants>>[number];
 type PropertyOption = Awaited<ReturnType<typeof getPropertiesForSelect>>[number];
+type Contract = Awaited<ReturnType<typeof getContractsByTenant>>[number];
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -45,6 +47,9 @@ export default function TenantsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [contractsOpen, setContractsOpen] = useState(false);
+  const [contractsTenant, setContractsTenant] = useState<Tenant | null>(null);
+  const [contracts, setContracts] = useState<Contract[]>([]);
 
   function load() {
     startTransition(async () => {
@@ -91,6 +96,13 @@ export default function TenantsPage() {
   function openCreate() {
     setEditing(null);
     setOpen(true);
+  }
+
+  async function openContracts(tenant: Tenant) {
+    setContractsTenant(tenant);
+    setContractsOpen(true);
+    const data = await getContractsByTenant(tenant.id);
+    setContracts(data);
   }
 
   return (
@@ -197,6 +209,40 @@ export default function TenantsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={contractsOpen} onOpenChange={(v) => { setContractsOpen(v); if (!v) { setContractsTenant(null); setContracts([]); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Umowy — {contractsTenant?.firstName} {contractsTenant?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          {contracts.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Brak umów dla tego najemcy.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Czynsz</TableHead>
+                  <TableHead>Od</TableHead>
+                  <TableHead>Do</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contracts.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.rentAmount.toFixed(2)} zł</TableCell>
+                    <TableCell>{new Date(c.startDate).toLocaleDateString("pl-PL")}</TableCell>
+                    <TableCell>{c.endDate ? new Date(c.endDate).toLocaleDateString("pl-PL") : "—"}</TableCell>
+                    <TableCell>{c.isActive ? "Aktywna" : "Zakończona"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {tenants.length === 0 ? (
         <p className="text-muted-foreground">Brak najemców. Dodaj pierwszego.</p>
       ) : (
@@ -207,6 +253,7 @@ export default function TenantsPage() {
               <TableHead>Email</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Nieruchomość</TableHead>
+              <TableHead className="text-center">Umowy</TableHead>
               <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
@@ -224,6 +271,17 @@ export default function TenantsPage() {
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
                 <TableCell>{t.property.address}</TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => openContracts(t)}
+                  >
+                    <FileText className="h-4 w-4" />
+                    {t._count.contracts}
+                  </Button>
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Link href={`/tenants/${t.id}`}>

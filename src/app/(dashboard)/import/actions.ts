@@ -193,3 +193,27 @@ export async function reconcileTransaction(
 
   return { success: true };
 }
+
+export async function dismissTransaction(transactionId: number) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+  });
+
+  if (!transaction) {
+    return { error: "Transakcja nie została znaleziona." };
+  }
+
+  if (transaction.status !== "UNMATCHED") {
+    return { error: "Transakcja jest już obsłużona." };
+  }
+
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: { status: "DISMISSED" },
+  });
+
+  revalidatePath("/import");
+  revalidatePath("/import/reconcile");
+
+  return { success: true };
+}
