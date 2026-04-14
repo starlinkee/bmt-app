@@ -278,6 +278,7 @@ export default function TenantsPage() {
                   >
                     {t.firstName} {t.lastName}
                   </Link>
+                  {t.nip && <div className="text-xs text-muted-foreground">NIP: {t.nip}</div>}
                 </TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
