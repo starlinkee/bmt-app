@@ -15,6 +15,10 @@ function getFrom() {
   return process.env.RESEND_FROM ?? "BMT <noreply@example.com>";
 }
 
+function getReplyTo(): string | undefined {
+  return process.env.RESEND_REPLY_TO ?? undefined;
+}
+
 function formatAmount(amount: number) {
   return amount.toLocaleString("pl-PL", { style: "currency", currency: "PLN" });
 }
@@ -81,6 +85,7 @@ export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
       to: data.to,
       subject,
       html,
+      ...(getReplyTo() ? { replyTo: getReplyTo() } : {}),
       ...(attachments.length > 0 ? { attachments } : {}),
     });
     if (error) {
@@ -130,6 +135,7 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<boolea
       to: data.to,
       subject: data.subject,
       html,
+      ...(getReplyTo() ? { replyTo: getReplyTo() } : {}),
     });
     if (error) {
       console.error(`[email] Błąd wysyłki przypomnienia do ${data.to}:`, error);
@@ -197,6 +203,7 @@ export async function sendMediaEmail(data: MediaEmailData): Promise<boolean> {
       to: data.to,
       subject,
       html,
+      ...(getReplyTo() ? { replyTo: getReplyTo() } : {}),
     });
     if (error) {
       console.error(`[email] Błąd wysyłki mediów do ${data.to}:`, error);
