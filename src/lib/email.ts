@@ -1,18 +1,18 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const MONTHS_PL = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
   "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
 ];
 
-function createTransporter() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
-  });
+function createResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
+
+function getFrom() {
+  return process.env.RESEND_FROM ?? "BMT <noreply@example.com>";
 }
 
 function formatAmount(amount: number) {
@@ -34,8 +34,8 @@ export interface RentEmailData {
 }
 
 export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
-  const transporter = createTransporter();
-  if (!transporter) return false;
+  const resend = createResend();
+  if (!resend) return false;
 
   const monthName = MONTHS_PL[data.month - 1];
   const subject = `Rachunek za czynsz – ${monthName} ${data.year} (${data.invoiceNumber})`;
@@ -69,26 +69,24 @@ export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
 </body>
 </html>`;
 
-  const mailOptions: Parameters<typeof transporter.sendMail>[0] = {
-    from: `BMT <${process.env.GMAIL_USER}>`,
-    to: data.to,
-    subject,
-    html,
-  };
-
+  const attachments: { filename: string; content: Buffer }[] = [];
   if (data.pdfAttachment) {
     const safeNumber = data.invoiceNumber.replace(/\//g, "-");
-    mailOptions.attachments = [
-      {
-        filename: `Rachunek_${safeNumber}.pdf`,
-        content: data.pdfAttachment,
-        contentType: "application/pdf",
-      },
-    ];
+    attachments.push({ filename: `Rachunek_${safeNumber}.pdf`, content: data.pdfAttachment });
   }
 
   try {
-    await transporter.sendMail(mailOptions);
+    const { error } = await resend.emails.send({
+      from: getFrom(),
+      to: data.to,
+      subject,
+      html,
+      ...(attachments.length > 0 ? { attachments } : {}),
+    });
+    if (error) {
+      console.error(`[email] Błąd wysyłki czynszu do ${data.to}:`, error);
+      return false;
+    }
     return true;
   } catch (err) {
     console.error(`[email] Błąd wysyłki czynszu do ${data.to}:`, err);
@@ -107,10 +105,9 @@ export interface ReminderEmailData {
 }
 
 export async function sendReminderEmail(data: ReminderEmailData): Promise<boolean> {
-  const transporter = createTransporter();
-  if (!transporter) return false;
+  const resend = createResend();
+  if (!resend) return false;
 
-  // Convert newlines to <br> for HTML
   const htmlBody = data.body
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -128,12 +125,16 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<boolea
 </html>`;
 
   try {
-    await transporter.sendMail({
-      from: `BMT <${process.env.GMAIL_USER}>`,
+    const { error } = await resend.emails.send({
+      from: getFrom(),
       to: data.to,
       subject: data.subject,
       html,
     });
+    if (error) {
+      console.error(`[email] Błąd wysyłki przypomnienia do ${data.to}:`, error);
+      return false;
+    }
     return true;
   } catch (err) {
     console.error(`[email] Błąd wysyłki przypomnienia do ${data.to}:`, err);
@@ -155,8 +156,8 @@ export interface MediaEmailData {
 }
 
 export async function sendMediaEmail(data: MediaEmailData): Promise<boolean> {
-  const transporter = createTransporter();
-  if (!transporter) return false;
+  const resend = createResend();
+  if (!resend) return false;
 
   const monthName = MONTHS_PL[data.month - 1];
   const subject = `Rozliczenie mediów – ${monthName} ${data.year} (${data.invoiceNumber})`;
@@ -191,7 +192,16 @@ export async function sendMediaEmail(data: MediaEmailData): Promise<boolean> {
 </html>`;
 
   try {
-    await transporter.sendMail({ from: `BMT <${process.env.GMAIL_USER}>`, to: data.to, subject, html });
+    const { error } = await resend.emails.send({
+      from: getFrom(),
+      to: data.to,
+      subject,
+      html,
+    });
+    if (error) {
+      console.error(`[email] Błąd wysyłki mediów do ${data.to}:`, error);
+      return false;
+    }
     return true;
   } catch (err) {
     console.error(`[email] Błąd wysyłki mediów do ${data.to}:`, err);
