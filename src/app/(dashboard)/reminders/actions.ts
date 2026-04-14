@@ -128,5 +128,6 @@ export async function sendReminderNow(id: number) {
   });
 
   revalidatePath("/reminders");
+  revalidatePath("/");
   return { sent, skipped: reminder.tenants.length - withEmail.length, error: null };
 }
