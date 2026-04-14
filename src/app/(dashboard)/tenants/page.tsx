@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,49 @@ type Tenant = Awaited<ReturnType<typeof getTenants>>[number];
 type PropertyOption = Awaited<ReturnType<typeof getPropertiesForSelect>>[number];
 type Contract = Awaited<ReturnType<typeof getContractsByTenant>>[number];
 
+function ActionButtons({
+  tenant,
+  onEdit,
+  onDelete,
+  onContracts,
+}: {
+  tenant: Tenant;
+  onEdit: (t: Tenant) => void;
+  onDelete: (id: number) => void;
+  onContracts: (t: Tenant) => void;
+}) {
+  return (
+    <>
+      <TableCell className="text-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1"
+          onClick={() => onContracts(tenant)}
+        >
+          <FileText className="h-4 w-4" />
+          {tenant._count.contracts}
+        </Button>
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1">
+          <Link href={`/tenants/${tenant.id}`}>
+            <Button variant="ghost" size="icon">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button variant="ghost" size="icon" onClick={() => onEdit(tenant)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(tenant.id)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </TableCell>
+    </>
+  );
+}
+
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [properties, setProperties] = useState<PropertyOption[]>([]);
@@ -51,6 +95,7 @@ export default function TenantsPage() {
   const [contractsOpen, setContractsOpen] = useState(false);
   const [contractsTenant, setContractsTenant] = useState<Tenant | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [activeTab, setActiveTab] = useState<"private" | "business">("private");
 
   function load() {
     startTransition(async () => {
@@ -95,9 +140,9 @@ export default function TenantsPage() {
     setOpen(true);
   }
 
-  function openCreate() {
+  function openCreate(type: "PRIVATE" | "BUSINESS") {
     setEditing(null);
-    setTenantType("PRIVATE");
+    setTenantType(type);
     setOpen(true);
   }
 
@@ -108,16 +153,14 @@ export default function TenantsPage() {
     setContracts(data);
   }
 
+  const privateTenants = tenants.filter((t) => t.tenantType !== "BUSINESS");
+  const businessTenants = tenants.filter((t) => t.tenantType === "BUSINESS");
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Najemcy</h1>
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Dodaj
-        </Button>
-      </div>
+      <h1 className="text-2xl font-semibold">Najemcy</h1>
 
+      {/* Form dialog */}
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -278,6 +321,7 @@ export default function TenantsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Contracts dialog */}
       <Dialog open={contractsOpen} onOpenChange={(v) => { setContractsOpen(v); if (!v) { setContractsTenant(null); setContracts([]); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -312,83 +356,117 @@ export default function TenantsPage() {
         </DialogContent>
       </Dialog>
 
-      {tenants.length === 0 ? (
-        <p className="text-muted-foreground">Brak najemców. Dodaj pierwszego.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Imię i nazwisko</TableHead>
-              <TableHead>Typ</TableHead>
-              <TableHead>NIP</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telefon</TableHead>
-              <TableHead>Nieruchomość</TableHead>
-              <TableHead className="text-center">Umowy</TableHead>
-              <TableHead className="w-24" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tenants.map((t) => (
-              <TableRow key={t.id}>
-                <TableCell className="font-medium">
-                  <Link
-                    href={`/tenants/${t.id}`}
-                    className="hover:underline"
-                  >
-                    {t.firstName} {t.lastName}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {t.tenantType === "BUSINESS" ? (
-                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                      Firmowy
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                      Prywatny
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>{t.tenantType === "BUSINESS" ? (t.nip ?? "—") : "—"}</TableCell>
-                <TableCell>{t.email ?? "—"}</TableCell>
-                <TableCell>{t.phone ?? "—"}</TableCell>
-                <TableCell>
-                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline text-sm">
-                    {t.property.address1}{t.property.address2 ? `, ${t.property.address2}` : ""}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => openContracts(t)}
-                  >
-                    <FileText className="h-4 w-4" />
-                    {t._count.contracts}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Link href={`/tenants/${t.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "private" | "business")}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="private">
+              Prywatni ({privateTenants.length})
+            </TabsTrigger>
+            <TabsTrigger value="business">
+              Firmowi ({businessTenants.length})
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => openCreate(activeTab === "business" ? "BUSINESS" : "PRIVATE")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Dodaj
+          </Button>
+        </div>
+
+        {/* Private tenants */}
+        <TabsContent value="private" className="mt-4">
+          {privateTenants.length === 0 ? (
+            <p className="text-muted-foreground">Brak prywatnych najemców.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Imię i nazwisko</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefon</TableHead>
+                  <TableHead>Nieruchomość</TableHead>
+                  <TableHead className="text-center">Umowy</TableHead>
+                  <TableHead className="w-24" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {privateTenants.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">
+                      <Link href={`/tenants/${t.id}`} className="hover:underline">
+                        {t.firstName} {t.lastName}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{t.email ?? "—"}</TableCell>
+                    <TableCell>{t.phone ?? "—"}</TableCell>
+                    <TableCell>
+                      <Link href={`/properties?open=${t.propertyId}`} className="hover:underline text-sm">
+                        {t.property.address1}{t.property.address2 ? `, ${t.property.address2}` : ""}
+                      </Link>
+                    </TableCell>
+                    <ActionButtons
+                      tenant={t}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
+                      onContracts={openContracts}
+                    />
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TabsContent>
+
+        {/* Business tenants */}
+        <TabsContent value="business" className="mt-4">
+          {businessTenants.length === 0 ? (
+            <p className="text-muted-foreground">Brak firmowych najemców.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nazwa</TableHead>
+                  <TableHead>NIP</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefon</TableHead>
+                  <TableHead>Ulica i numer</TableHead>
+                  <TableHead>Kod i miasto</TableHead>
+                  <TableHead>Nieruchomość</TableHead>
+                  <TableHead className="text-center">Umowy</TableHead>
+                  <TableHead className="w-24" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {businessTenants.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">
+                      <Link href={`/tenants/${t.id}`} className="hover:underline">
+                        {t.firstName} {t.lastName}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{t.nip ?? "—"}</TableCell>
+                    <TableCell>{t.email ?? "—"}</TableCell>
+                    <TableCell>{t.phone ?? "—"}</TableCell>
+                    <TableCell>{t.address1 ?? "—"}</TableCell>
+                    <TableCell>{t.address2 ?? "—"}</TableCell>
+                    <TableCell>
+                      <Link href={`/properties?open=${t.propertyId}`} className="hover:underline text-sm">
+                        {t.property.address1}{t.property.address2 ? `, ${t.property.address2}` : ""}
+                      </Link>
+                    </TableCell>
+                    <ActionButtons
+                      tenant={t}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
+                      onContracts={openContracts}
+                    />
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
