@@ -111,10 +111,14 @@ export async function generateRents(month: number, year: number) {
     const invoicesWithEmail = createdInvoices.filter((inv) => inv.tenant.email);
 
     // Sequential: same sheet is reused per tenant, can't parallelize
+    let isFirstPdf = true;
     for (const inv of invoicesWithEmail) {
       let pdfAttachment: Buffer | undefined;
 
       if (pdfEnabled && rangeMapping.length > 0) {
+        // Google Sheets export limit: ~1 req/2s per spreadsheet
+        if (!isFirstPdf) await new Promise((r) => setTimeout(r, 2500));
+        isFirstPdf = false;
         try {
           const today = new Date();
           const lastDay = new Date(inv.year, inv.month, 0).getDate();
