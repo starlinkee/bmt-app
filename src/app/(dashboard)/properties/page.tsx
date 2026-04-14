@@ -232,7 +232,8 @@ function PropertiesPageInner() {
           <TableHeader>
             <TableRow>
               <TableHead>Nazwa</TableHead>
-              <TableHead>Adres</TableHead>
+              <TableHead>Ulica i numer</TableHead>
+              <TableHead>Kod i miasto</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead className="text-center">Najemcy</TableHead>
               <TableHead className="w-24" />
@@ -245,10 +246,8 @@ function PropertiesPageInner() {
                 className={highlightId === p.id ? "transition-colors duration-300 bg-yellow-100 dark:bg-yellow-900/30" : "transition-colors duration-1000"}
               >
                 <TableCell className="font-medium">{p.name || "—"}</TableCell>
-                <TableCell>
-                  <div>{p.address1}</div>
-                  {p.address2 && <div className="text-xs text-muted-foreground">{p.address2}</div>}
-                </TableCell>
+                <TableCell>{p.address1}</TableCell>
+                <TableCell>{p.address2 || "—"}</TableCell>
                 <TableCell>{p.type}</TableCell>
                 <TableCell className="text-center">
                   <Button
