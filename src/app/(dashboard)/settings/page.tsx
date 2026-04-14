@@ -131,6 +131,24 @@ export default function SettingsPage() {
               </p>
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="driveInvoicesFolderId">ID folderu Google Drive (rachunki PDF)</Label>
+              <Input
+                id="driveInvoicesFolderId"
+                name="driveInvoicesFolderId"
+                defaultValue={config.driveInvoicesFolderId}
+                placeholder="np. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+                key={config.driveInvoicesFolderId}
+              />
+              <p className="text-xs text-muted-foreground">
+                ID folderu na Drive, gdzie będą odkładane rachunki PDF w strukturze{" "}
+                <code>rok/miesiąc/</code>. Znajdziesz je w URL folderu po{" "}
+                <code>/folders/</code>. Folder musi być udostępniony konto serwisowemu:{" "}
+                <code>bmt-app@northern-math-493313-q3.iam.gserviceaccount.com</code>.
+                Zostaw puste, żeby nie zapisywać na Drive.
+              </p>
+            </div>
+
             <Button type="submit" disabled={isPending} className="w-fit">
               Zapisz ustawienia
             </Button>

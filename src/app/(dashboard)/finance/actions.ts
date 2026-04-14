@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendRentEmail } from "@/lib/email";
 import { writeNamedRanges, exportSheetAsPdf } from "@/lib/sheetsEngine";
+import { ensureYearMonthFolder, uploadPdfToDrive } from "@/lib/driveEngine";
 import { amountToWordsPLN } from "@/lib/numberWords";
 import { revalidatePath } from "next/cache";
 import { markMonthlyTaskDone } from "@/lib/tasks";
@@ -145,6 +146,16 @@ export async function generateRents(month: number, year: number) {
             appConfig!.rentInvoiceSpreadsheetId,
             appConfig!.rentInvoicePdfGid || undefined
           );
+
+          if (appConfig!.driveInvoicesFolderId.trim()) {
+            try {
+              const folderId = await ensureYearMonthFolder(inv.year, inv.month, appConfig!.driveInvoicesFolderId.trim());
+              const filename = `Rachunek_${inv.number.replace(/\//g, "-")}_${inv.tenant.lastName}_${inv.tenant.firstName}.pdf`;
+              await uploadPdfToDrive(filename, pdfAttachment, folderId);
+            } catch (driveErr) {
+              console.error(`[drive] Błąd zapisu PDF na Drive dla ${inv.number}:`, driveErr);
+            }
+          }
         } catch (err) {
           console.error(`[pdf] Błąd generowania PDF dla ${inv.number}:`, err);
         }

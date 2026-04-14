@@ -114,6 +114,7 @@ model AppConfig {
   rentInvoiceSpreadsheetId    String @default("")
   rentInvoiceInputMappingJSON String @default("[]")
   rentInvoicePdfGid           String @default("")
+  driveInvoicesFolderId       String @default("")
 }
 
 model ReminderSchedule {

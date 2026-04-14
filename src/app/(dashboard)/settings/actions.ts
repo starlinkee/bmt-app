@@ -15,6 +15,7 @@ export async function updateAppConfig(formData: FormData) {
   const rentInvoiceSpreadsheetId = (formData.get("rentInvoiceSpreadsheetId") as string) ?? "";
   const rentInvoiceInputMappingJSON = (formData.get("rentInvoiceInputMappingJSON") as string) ?? "[]";
   const rentInvoicePdfGid = (formData.get("rentInvoicePdfGid") as string) ?? "";
+  const driveInvoicesFolderId = (formData.get("driveInvoicesFolderId") as string) ?? "";
 
   try {
     const parsed = JSON.parse(rentInvoiceInputMappingJSON);
@@ -35,11 +36,13 @@ export async function updateAppConfig(formData: FormData) {
       rentInvoiceSpreadsheetId,
       rentInvoiceInputMappingJSON,
       rentInvoicePdfGid,
+      driveInvoicesFolderId,
     },
     update: {
       rentInvoiceSpreadsheetId,
       rentInvoiceInputMappingJSON,
       rentInvoicePdfGid,
+      driveInvoicesFolderId,
     },
   });
 
