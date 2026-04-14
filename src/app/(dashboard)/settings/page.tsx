@@ -19,7 +19,7 @@ const DEFAULT_MAPPING = JSON.stringify(
     { range: "nabywca_nazwa",     value: "{najemca}" },
     { range: "nabywca_adres_1",   value: "{adres_1}" },
     { range: "nabywca_adres_2",   value: "{adres_2}" },
-    { range: "nabywca_nip",       value: "" },
+    { range: "nabywca_nip",       value: "{nip}" },
     { range: "sprzedawca_nazwa",  value: "" },
     { range: "sprzedawca_adres_1", value: "" },
     { range: "sprzedawca_adres_2", value: "" },
@@ -111,7 +111,8 @@ export default function SettingsPage() {
                 <code>{"{kwota}"}</code>,{" "}
                 <code>{"{kwota_slownie}"}</code>,{" "}
                 <code>{"{data_wystawienia}"}</code>,{" "}
-                <code>{"{termin_platnosci}"}</code>.
+                <code>{"{termin_platnosci}"}</code>,{" "}
+                <code>{"{nip}"}</code>.
               </p>
             </div>
 
