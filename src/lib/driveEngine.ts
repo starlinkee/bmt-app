@@ -1,22 +1,24 @@
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-function getAuth() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!raw) throw new Error("Brak GOOGLE_SERVICE_ACCOUNT_JSON w zmiennych środowiskowych.");
+function getOAuthClient() {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
 
-  const credentials = JSON.parse(
-    raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf-8")
-  );
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error(
+      "Brak zmiennych GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET / GOOGLE_OAUTH_REFRESH_TOKEN w .env"
+    );
+  }
 
-  return new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/drive"],
-  });
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  return oauth2Client;
 }
 
 function getDriveClient() {
-  return google.drive({ version: "v3", auth: getAuth() });
+  return google.drive({ version: "v3", auth: getOAuthClient() });
 }
 
 /**
