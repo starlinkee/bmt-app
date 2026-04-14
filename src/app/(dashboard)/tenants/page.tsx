@@ -261,9 +261,11 @@ export default function TenantsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Imię i nazwisko</TableHead>
+              <TableHead>NIP</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Telefon</TableHead>
-              <TableHead>Nieruchomość</TableHead>
+              <TableHead>Ulica</TableHead>
+              <TableHead>Kod / Miasto</TableHead>
               <TableHead className="text-center">Umowy</TableHead>
               <TableHead className="w-24" />
             </TableRow>
@@ -278,14 +280,12 @@ export default function TenantsPage() {
                   >
                     {t.firstName} {t.lastName}
                   </Link>
-                  {t.nip && <div className="text-xs text-muted-foreground">NIP: {t.nip}</div>}
                 </TableCell>
+                <TableCell>{t.nip ?? "—"}</TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
-                <TableCell>
-                  <div>{t.property.address1}</div>
-                  {t.property.address2 && <div className="text-xs text-muted-foreground">{t.property.address2}</div>}
-                </TableCell>
+                <TableCell>{t.property.address1}</TableCell>
+                <TableCell>{t.property.address2 ?? "—"}</TableCell>
                 <TableCell className="text-center">
                   <Button
                     variant="ghost"
