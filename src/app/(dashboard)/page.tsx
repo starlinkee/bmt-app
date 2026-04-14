@@ -49,10 +49,21 @@ export default function HomePage() {
     });
   }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString("pl-PL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Strona główna</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Strona główna</h1>
+          <p className="text-sm text-muted-foreground capitalize">{dateLabel}</p>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -97,6 +108,7 @@ export default function HomePage() {
             <TableRow>
               <TableHead>Zadanie</TableHead>
               <TableHead>Miesiąc</TableHead>
+              <TableHead>Utworzono</TableHead>
               <TableHead>Status</TableHead>
               {filter === "DONE" && <TableHead>Ukończono</TableHead>}
             </TableRow>
@@ -109,6 +121,9 @@ export default function HomePage() {
                 </TableCell>
                 <TableCell>
                   {MONTHS_PL[task.month - 1]} {task.year}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  01.{String(task.month).padStart(2, "0")}.{task.year}
                 </TableCell>
                 <TableCell>
                   {task.status === "TODO" ? (
