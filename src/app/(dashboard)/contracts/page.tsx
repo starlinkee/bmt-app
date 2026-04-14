@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   getContracts,
@@ -255,8 +256,9 @@ export default function ContractsPage() {
                   {c.tenant.firstName} {c.tenant.lastName}
                 </TableCell>
                 <TableCell>
-                  <div>{c.tenant.property.address1}</div>
-                  {c.tenant.property.address2 && <div className="text-xs text-muted-foreground">{c.tenant.property.address2}</div>}
+                  <Link href={`/properties?open=${c.tenant.propertyId}`} className="hover:underline text-sm">
+                    {c.tenant.property.address1}{c.tenant.property.address2 ? `, ${c.tenant.property.address2}` : ""}
+                  </Link>
                 </TableCell>
                 <TableCell>{formatCurrency(c.rentAmount)}</TableCell>
                 <TableCell className="text-center font-mono text-sm">
