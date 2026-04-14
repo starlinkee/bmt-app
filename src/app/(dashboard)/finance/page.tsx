@@ -79,7 +79,7 @@ export default function FinancePage() {
 
     // Estimate: 2.5s per tenant with email + 3s base
     const pdfCount = withEmail.length;
-    const estimatedMs = pdfCount > 0 ? pdfCount * 2500 + 3000 : 3000;
+    const estimatedMs = pdfCount > 0 ? pdfCount * 4000 + 3000 : 3000;
 
     setProgress(0);
     setGenerating(true);

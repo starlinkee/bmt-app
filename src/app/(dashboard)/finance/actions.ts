@@ -117,7 +117,7 @@ export async function generateRents(month: number, year: number) {
 
       if (pdfEnabled && rangeMapping.length > 0) {
         // Google Sheets export limit: ~1 req/2s per spreadsheet
-        if (!isFirstPdf) await new Promise((r) => setTimeout(r, 2500));
+        if (!isFirstPdf) await new Promise((r) => setTimeout(r, 4000));
         isFirstPdf = false;
         try {
           const today = new Date();
