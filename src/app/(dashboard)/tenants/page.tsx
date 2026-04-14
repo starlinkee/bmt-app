@@ -284,8 +284,16 @@ export default function TenantsPage() {
                 <TableCell>{t.nip ?? "—"}</TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
-                <TableCell>{t.property.address1}</TableCell>
-                <TableCell>{t.property.address2 ?? "—"}</TableCell>
+                <TableCell>
+                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline">
+                    {t.property.address1}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline">
+                    {t.property.address2 ?? "—"}
+                  </Link>
+                </TableCell>
                 <TableCell className="text-center">
                   <Button
                     variant="ghost"

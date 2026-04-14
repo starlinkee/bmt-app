@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/properties", label: "Najem", icon: Building2 },
+  { href: "/properties", label: "Nieruchomości", icon: Building2 },
   { href: "/tenants", label: "Najemcy", icon: Users },
   { href: "/contracts", label: "Umowy", icon: FileText },
   { href: "/finance", label: "Wystawienie czynszu", icon: Wallet },

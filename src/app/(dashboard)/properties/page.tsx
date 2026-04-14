@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +42,8 @@ type Tenant = Awaited<ReturnType<typeof getTenantsByProperty>>[number];
 
 const PROPERTY_TYPES = ["Mieszkanie", "Lokal usługowy", "Garaż", "Inne"];
 
-export default function PropertiesPage() {
+function PropertiesPageInner() {
+  const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Property | null>(null);
@@ -52,7 +54,18 @@ export default function PropertiesPage() {
 
   function load() {
     startTransition(async () => {
-      setProperties(await getProperties());
+      const data = await getProperties();
+      setProperties(data);
+      // Auto-open tenants dialog if ?open=<id> in URL
+      const openId = Number(searchParams.get("open"));
+      if (openId) {
+        const prop = data.find((p) => p.id === openId);
+        if (prop) {
+          setTenantsProperty(prop);
+          setTenantsOpen(true);
+          getTenantsByProperty(prop.id).then(setTenants);
+        }
+      }
     });
   }
 
@@ -264,5 +277,13 @@ export default function PropertiesPage() {
         </Table>
       )}
     </div>
+  );
+}
+
+export default function PropertiesPage() {
+  return (
+    <Suspense>
+      <PropertiesPageInner />
+    </Suspense>
   );
 }
