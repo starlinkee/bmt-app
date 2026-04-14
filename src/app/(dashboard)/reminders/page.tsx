@@ -147,11 +147,11 @@ export default function RemindersPage() {
       return;
     }
     if (result.sent === 0) {
-      toast.info(`Brak najemców z adresem e-mail. Pominięto: ${result.skipped}.`);
+      toast.info(`Brak najemców z adresem e-mail. Pominięto: ${result.skipped ?? 0}.`);
     } else {
       toast.success(
         `Wysłano ${result.sent} e-mail${result.sent === 1 ? "" : "i"}.` +
-          (result.skipped > 0 ? ` Bez e-maila: ${result.skipped}.` : "")
+          ((result.skipped ?? 0) > 0 ? ` Bez e-maila: ${result.skipped}.` : "")
       );
     }
     load();

@@ -141,7 +141,7 @@ export default function MediaPage() {
                         key={`p-${editing?.id ?? "new"}-${p.id}`}
                         className="h-4 w-4 rounded border-input accent-primary"
                       />
-                      <span className="text-sm">{p.address}</span>
+                      <span className="text-sm">{p.address1}{p.address2 ? `, ${p.address2}` : ""}</span>
                     </label>
                   ))
                 )}
@@ -229,7 +229,7 @@ export default function MediaPage() {
               <TableRow key={g.id}>
                 <TableCell className="font-medium">{g.name}</TableCell>
                 <TableCell>
-                  {g.properties.map((p) => p.property.address).join(", ")}
+                  {g.properties.map((p) => p.property.address1).join(", ")}
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate font-mono text-xs">
                   {g.spreadsheetId}

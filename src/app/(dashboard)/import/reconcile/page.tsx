@@ -214,7 +214,7 @@ export default function ReconcilePage() {
                         <SelectContent>
                           {tenants.map((t) => (
                             <SelectItem key={t.id} value={t.id.toString()}>
-                              {t.firstName} {t.lastName} — {t.property.address}
+                              {t.firstName} {t.lastName} — {t.property.address1}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -169,6 +169,17 @@ export default function TenantsPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor="nip">NIP (opcjonalnie)</Label>
+              <Input
+                id="nip"
+                name="nip"
+                defaultValue={editing?.nip ?? ""}
+                placeholder="np. 1234567890"
+                key={`nip-${editing?.id ?? "new"}`}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="propertyId">Nieruchomość</Label>
               <Select
                 name="propertyId"
@@ -181,7 +192,7 @@ export default function TenantsPage() {
                 <SelectContent>
                   {properties.map((p) => (
                     <SelectItem key={p.id} value={p.id.toString()}>
-                      {p.address} ({p.type})
+                      {p.address1}{p.address2 ? `, ${p.address2}` : ""} ({p.type})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -270,7 +281,10 @@ export default function TenantsPage() {
                 </TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
-                <TableCell>{t.property.address}</TableCell>
+                <TableCell>
+                  <div>{t.property.address1}</div>
+                  {t.property.address2 && <div className="text-xs text-muted-foreground">{t.property.address2}</div>}
+                </TableCell>
                 <TableCell className="text-center">
                   <Button
                     variant="ghost"

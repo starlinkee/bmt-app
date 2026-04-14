@@ -80,7 +80,7 @@ export async function generateRents(month: number, year: number) {
             email: true,
             firstName: true,
             lastName: true,
-            property: { select: { address: true } },
+            property: { select: { address1: true, address2: true } },
           },
         },
       },
@@ -115,7 +115,9 @@ export async function generateRents(month: number, year: number) {
           const context: Record<string, string> = {
             numer_rachunku: inv.number,
             najemca: `${inv.tenant.firstName} ${inv.tenant.lastName}`,
-            adres: inv.tenant.property.address,
+            adres: inv.tenant.property.address1,
+            adres_1: inv.tenant.property.address1,
+            adres_2: inv.tenant.property.address2 ?? "",
             miesiac: MONTHS_PL[inv.month - 1],
             rok: inv.year.toString(),
             kwota: inv.amount.toLocaleString("pl-PL", { minimumFractionDigits: 2 }),
@@ -147,7 +149,7 @@ export async function generateRents(month: number, year: number) {
         amount: inv.amount,
         month: inv.month,
         year: inv.year,
-        address: inv.tenant.property.address,
+        address: [inv.tenant.property.address1, inv.tenant.property.address2].filter(Boolean).join(", "),
         pdfAttachment,
       });
       if (sent) emailsSent++;
@@ -204,7 +206,7 @@ export async function getGeneratedRents(month: number, year: number) {
         select: {
           firstName: true,
           lastName: true,
-          property: { select: { address: true } },
+          property: { select: { address1: true, address2: true } },
         },
       },
     },

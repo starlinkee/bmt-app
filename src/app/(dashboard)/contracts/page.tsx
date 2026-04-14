@@ -139,7 +139,7 @@ export default function ContractsPage() {
                 <SelectContent>
                   {tenants.map((t) => (
                     <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.firstName} {t.lastName} — {t.property.address}
+                      {t.firstName} {t.lastName} — {t.property.address1}{t.property.address2 ? `, ${t.property.address2}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -254,7 +254,10 @@ export default function ContractsPage() {
                 <TableCell className="font-medium">
                   {c.tenant.firstName} {c.tenant.lastName}
                 </TableCell>
-                <TableCell>{c.tenant.property.address}</TableCell>
+                <TableCell>
+                  <div>{c.tenant.property.address1}</div>
+                  {c.tenant.property.address2 && <div className="text-xs text-muted-foreground">{c.tenant.property.address2}</div>}
+                </TableCell>
                 <TableCell>{formatCurrency(c.rentAmount)}</TableCell>
                 <TableCell className="text-center font-mono text-sm">
                   {c.invoiceSeqNumber > 0 ? String(c.invoiceSeqNumber).padStart(3, "0") : "—"}

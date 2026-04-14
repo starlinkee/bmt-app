@@ -123,7 +123,7 @@ export async function getAllTenants() {
       firstName: true,
       lastName: true,
       bankAccountsAsText: true,
-      property: { select: { address: true } },
+      property: { select: { address1: true, address2: true } },
     },
     orderBy: { lastName: "asc" },
   });

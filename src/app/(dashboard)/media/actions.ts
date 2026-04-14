@@ -13,7 +13,7 @@ export async function getSettlementGroups() {
   return prisma.settlementGroup.findMany({
     include: {
       properties: {
-        include: { property: { select: { address: true } } },
+        include: { property: { select: { address1: true, address2: true } } },
       },
     },
     orderBy: { name: "asc" },
@@ -22,8 +22,8 @@ export async function getSettlementGroups() {
 
 export async function getPropertiesForSelect() {
   return prisma.property.findMany({
-    orderBy: { address: "asc" },
-    select: { id: true, address: true },
+    orderBy: { address1: "asc" },
+    select: { id: true, address1: true, address2: true },
   });
 }
 

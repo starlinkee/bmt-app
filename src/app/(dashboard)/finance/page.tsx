@@ -286,7 +286,7 @@ export default function FinancePage() {
                   <TableCell className="font-medium">
                     {r.tenant.firstName} {r.tenant.lastName}
                   </TableCell>
-                  <TableCell>{r.tenant.property.address}</TableCell>
+                  <TableCell>{r.tenant.property.address1}{r.tenant.property.address2 ? `, ${r.tenant.property.address2}` : ""}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(r.amount)}
                   </TableCell>

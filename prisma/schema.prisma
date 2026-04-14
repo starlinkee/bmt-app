@@ -14,7 +14,8 @@ datasource db {
 model Property {
   id                        Int                       @id @default(autoincrement())
   name                      String                    @default("")
-  address                   String
+  address1                  String
+  address2                  String?
   type                      String
   createdAt                 DateTime                  @default(now())
   updatedAt                 DateTime                  @updatedAt
@@ -29,6 +30,7 @@ model Tenant {
   email              String?
   phone              String?
   bankAccountsAsText String        @default("")
+  nip                String?
   propertyId         Int
   property           Property      @relation(fields: [propertyId], references: [id])
   createdAt          DateTime      @default(now())

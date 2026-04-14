@@ -192,7 +192,7 @@ export default function SettlementGroupPage() {
         <div>
           <h1 className="text-2xl font-semibold">{group.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {group.properties.map((p) => p.property.address).join(", ")}
+            {group.properties.map((p) => p.property.address1).join(", ")}
           </p>
         </div>
       </div>

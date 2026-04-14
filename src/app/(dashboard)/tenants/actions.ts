@@ -19,8 +19,8 @@ export async function getContractsByTenant(tenantId: number) {
 
 export async function getPropertiesForSelect() {
   return prisma.property.findMany({
-    select: { id: true, address: true, type: true },
-    orderBy: { address: "asc" },
+    select: { id: true, address1: true, address2: true, type: true },
+    orderBy: { address1: "asc" },
   });
 }
 
@@ -39,12 +39,15 @@ export async function createTenant(formData: FormData) {
     return { error: "Nieruchomość jest wymagana." };
   }
 
+  const nip = (formData.get("nip") as string) || null;
+
   await prisma.tenant.create({
     data: {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email?.trim() || null,
       phone: phone?.trim() || null,
+      nip: nip?.trim() || null,
       bankAccountsAsText: bankAccountsAsText.trim(),
       propertyId,
     },
@@ -69,6 +72,8 @@ export async function updateTenant(id: number, formData: FormData) {
     return { error: "Nieruchomość jest wymagana." };
   }
 
+  const nip = (formData.get("nip") as string) || null;
+
   await prisma.tenant.update({
     where: { id },
     data: {
@@ -76,6 +81,7 @@ export async function updateTenant(id: number, formData: FormData) {
       lastName: lastName.trim(),
       email: email?.trim() || null,
       phone: phone?.trim() || null,
+      nip: nip?.trim() || null,
       bankAccountsAsText: bankAccountsAsText.trim(),
       propertyId,
     },

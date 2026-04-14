@@ -16,7 +16,7 @@ export async function getContracts() {
 
 export async function getTenantsForSelect() {
   return prisma.tenant.findMany({
-    select: { id: true, firstName: true, lastName: true, property: { select: { address: true } } },
+    select: { id: true, firstName: true, lastName: true, property: { select: { address1: true, address2: true } } },
     orderBy: { lastName: "asc" },
   });
 }

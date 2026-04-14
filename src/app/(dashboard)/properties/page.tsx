@@ -141,13 +141,24 @@ export default function PropertiesPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="address">Adres</Label>
+              <Label htmlFor="address1">Ulica i numer</Label>
               <Input
-                id="address"
-                name="address"
-                defaultValue={editing?.address ?? ""}
+                id="address1"
+                name="address1"
+                defaultValue={editing?.address1 ?? ""}
+                placeholder="np. ul. Marszałkowska 1/2"
                 required
-                key={editing?.id ?? "new"}
+                key={`a1-${editing?.id ?? "new"}`}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="address2">Kod pocztowy i miasto</Label>
+              <Input
+                id="address2"
+                name="address2"
+                defaultValue={editing?.address2 ?? ""}
+                placeholder="np. 00-001 Warszawa"
+                key={`a2-${editing?.id ?? "new"}`}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -176,7 +187,7 @@ export default function PropertiesPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Najemcy — {tenantsProperty?.address}
+              Najemcy — {tenantsProperty?.address1}{tenantsProperty?.address2 ? `, ${tenantsProperty.address2}` : ""}
             </DialogTitle>
           </DialogHeader>
           {tenants.length === 0 ? (
@@ -221,7 +232,10 @@ export default function PropertiesPage() {
             {properties.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name || "—"}</TableCell>
-                <TableCell>{p.address}</TableCell>
+                <TableCell>
+                  <div>{p.address1}</div>
+                  {p.address2 && <div className="text-xs text-muted-foreground">{p.address2}</div>}
+                </TableCell>
                 <TableCell>{p.type}</TableCell>
                 <TableCell className="text-center">
                   <Button

@@ -88,6 +88,8 @@ export async function processSettlement(
         include: {
           property: {
             include: {
+              address1: true,
+              address2: true,
               tenants: {
                 select: {
                   id: true,
@@ -131,7 +133,10 @@ export async function processSettlement(
   // Build map from tenantId to property address for emails
   const tenantAddressMap = new Map(
     group.properties.flatMap((p) =>
-      p.property.tenants.map((t) => [t.id, p.property.address])
+      p.property.tenants.map((t) => [
+        t.id,
+        [p.property.address1, p.property.address2].filter(Boolean).join(", "),
+      ])
     )
   );
 

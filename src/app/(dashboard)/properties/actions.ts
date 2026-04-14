@@ -12,15 +12,21 @@ export async function getProperties() {
 
 export async function createProperty(formData: FormData) {
   const name = formData.get("name") as string;
-  const address = formData.get("address") as string;
+  const address1 = formData.get("address1") as string;
+  const address2 = (formData.get("address2") as string) || null;
   const type = formData.get("type") as string;
 
-  if (!address?.trim() || !type?.trim()) {
+  if (!address1?.trim() || !type?.trim()) {
     return { error: "Adres i typ lokalu są wymagane." };
   }
 
   await prisma.property.create({
-    data: { name: (name ?? "").trim(), address: address.trim(), type: type.trim() },
+    data: {
+      name: (name ?? "").trim(),
+      address1: address1.trim(),
+      address2: address2?.trim() || null,
+      type: type.trim(),
+    },
   });
 
   revalidatePath("/properties");
@@ -29,16 +35,22 @@ export async function createProperty(formData: FormData) {
 
 export async function updateProperty(id: number, formData: FormData) {
   const name = formData.get("name") as string;
-  const address = formData.get("address") as string;
+  const address1 = formData.get("address1") as string;
+  const address2 = (formData.get("address2") as string) || null;
   const type = formData.get("type") as string;
 
-  if (!address?.trim() || !type?.trim()) {
+  if (!address1?.trim() || !type?.trim()) {
     return { error: "Adres i typ lokalu są wymagane." };
   }
 
   await prisma.property.update({
     where: { id },
-    data: { name: (name ?? "").trim(), address: address.trim(), type: type.trim() },
+    data: {
+      name: (name ?? "").trim(),
+      address1: address1.trim(),
+      address2: address2?.trim() || null,
+      type: type.trim(),
+    },
   });
 
   revalidatePath("/properties");

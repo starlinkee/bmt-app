@@ -216,7 +216,7 @@ export default function TenantDetailPage({
               {tenant.firstName} {tenant.lastName}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {tenant.property.address} ({tenant.property.type})
+              {tenant.property.address1}{tenant.property.address2 ? `, ${tenant.property.address2}` : ""} ({tenant.property.type})
             </p>
           </div>
         </div>
