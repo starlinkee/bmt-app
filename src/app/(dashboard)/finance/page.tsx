@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +53,9 @@ export default function FinancePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewTenant[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function load() {
     startTransition(async () => {
@@ -73,7 +76,27 @@ export default function FinancePage() {
 
   async function handleConfirm() {
     setConfirmOpen(false);
+
+    // Estimate: 2.5s per tenant with email + 3s base
+    const pdfCount = withEmail.length;
+    const estimatedMs = pdfCount > 0 ? pdfCount * 2500 + 3000 : 3000;
+
+    setProgress(0);
+    setGenerating(true);
+    const startedAt = Date.now();
+    progressInterval.current = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      // Asymptotically approach 95% — real completion sets 100%
+      const pct = Math.min(95, (elapsed / estimatedMs) * 100);
+      setProgress(pct);
+    }, 200);
+
     const result = await generateRents(month, year);
+
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    setProgress(100);
+    setTimeout(() => setGenerating(false), 500);
+
     if (result.error) {
       toast.error(result.error);
       return;
@@ -97,6 +120,28 @@ export default function FinancePage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Wystawienie czynszu</h1>
+
+      <Dialog open={generating}>
+        <DialogContent className="max-w-sm [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Wystawianie czynszów…</DialogTitle>
+            <DialogDescription>
+              {withEmail.length > 0
+                ? `Generowanie ${withEmail.length} PDF${withEmail.length > 1 ? "ów" : "u"} i wysyłka e-maili. Proszę czekać.`
+                : "Trwa wystawianie czynszów. Proszę czekać."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 py-2">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-right text-xs text-muted-foreground">{Math.round(progress)}%</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-md">
