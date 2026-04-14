@@ -8,10 +8,10 @@ async function main() {
 
   // ── Properties ─────────────────────────────────────────────────────────────
   const p1 = await prisma.property.create({
-    data: { address: "Jana Pawła 64/1", type: "Mieszkanie" },
+    data: { address1: "Jana Pawła 64/1", type: "Mieszkanie" },
   });
   const p2 = await prisma.property.create({
-    data: { address: "Jana Pawła 64/2", type: "Mieszkanie" },
+    data: { address1: "Jana Pawła 64/2", type: "Mieszkanie" },
   });
 
   // ── Tenants ────────────────────────────────────────────────────────────────

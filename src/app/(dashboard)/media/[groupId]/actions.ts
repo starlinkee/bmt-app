@@ -89,8 +89,6 @@ export async function processSettlement(
         include: {
           property: {
             include: {
-              address1: true,
-              address2: true,
               tenants: {
                 select: {
                   id: true,
