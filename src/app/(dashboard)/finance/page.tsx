@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Receipt, CheckCircle2, AlertCircle, Mail, MailX } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { generateRents, getGeneratedRents, getFinanceStats, getRentPreview } from "./actions";
 
@@ -286,7 +287,11 @@ export default function FinancePage() {
                   <TableCell className="font-medium">
                     {r.tenant.firstName} {r.tenant.lastName}
                   </TableCell>
-                  <TableCell>{r.tenant.property.address1}{r.tenant.property.address2 ? `, ${r.tenant.property.address2}` : ""}</TableCell>
+                  <TableCell>
+                    <Link href={`/properties?open=${r.tenant.propertyId}`} className="hover:underline text-sm">
+                      {r.tenant.property.address1}{r.tenant.property.address2 ? `, ${r.tenant.property.address2}` : ""}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(r.amount)}
                   </TableCell>

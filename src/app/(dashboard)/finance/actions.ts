@@ -218,6 +218,7 @@ export async function getGeneratedRents(month: number, year: number) {
         select: {
           firstName: true,
           lastName: true,
+          propertyId: true,
           property: { select: { address1: true, address2: true } },
         },
       },
