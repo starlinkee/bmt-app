@@ -242,7 +242,9 @@ export default function FinancePage() {
                 <TableRow key={r.id}>
                   <TableCell className="font-mono text-xs">{r.number || "—"}</TableCell>
                   <TableCell className="font-medium">
-                    {r.tenant.firstName} {r.tenant.lastName}
+                    <Link href={`/tenants/${r.tenantId}`} className="hover:underline">
+                      {r.tenant.firstName} {r.tenant.lastName}
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <Link href={`/properties?open=${r.tenant.propertyId}`} className="hover:underline text-sm">

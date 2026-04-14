@@ -253,7 +253,9 @@ export default function ContractsPage() {
             {contracts.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">
-                  {c.tenant.firstName} {c.tenant.lastName}
+                  <Link href={`/tenants/${c.tenantId}`} className="hover:underline">
+                    {c.tenant.firstName} {c.tenant.lastName}
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <Link href={`/properties?open=${c.tenant.propertyId}`} className="hover:underline text-sm">
