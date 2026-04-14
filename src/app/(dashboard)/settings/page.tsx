@@ -17,8 +17,8 @@ const DEFAULT_MAPPING = JSON.stringify(
     { range: "data_wystawienia",  value: "{data_wystawienia}" },
     { range: "termin_platnosci",  value: "{termin_platnosci}" },
     { range: "nabywca_nazwa",     value: "{najemca}" },
-    { range: "nabywca_adres_1",   value: "{adres}" },
-    { range: "nabywca_adres_2",   value: "" },
+    { range: "nabywca_adres_1",   value: "{adres_1}" },
+    { range: "nabywca_adres_2",   value: "{adres_2}" },
     { range: "nabywca_nip",       value: "" },
     { range: "sprzedawca_nazwa",  value: "" },
     { range: "sprzedawca_adres_1", value: "" },
@@ -104,7 +104,8 @@ export default function SettingsPage() {
                 Dostępne placeholdery:{" "}
                 <code>{"{numer_rachunku}"}</code>,{" "}
                 <code>{"{najemca}"}</code>,{" "}
-                <code>{"{adres}"}</code>,{" "}
+                <code>{"{adres_1}"}</code>,{" "}
+                <code>{"{adres_2}"}</code>,{" "}
                 <code>{"{miesiac}"}</code>,{" "}
                 <code>{"{rok}"}</code>,{" "}
                 <code>{"{kwota}"}</code>,{" "}

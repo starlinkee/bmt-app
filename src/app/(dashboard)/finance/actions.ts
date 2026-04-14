@@ -116,7 +116,6 @@ export async function generateRents(month: number, year: number) {
           const context: Record<string, string> = {
             numer_rachunku: inv.number,
             najemca: `${inv.tenant.firstName} ${inv.tenant.lastName}`,
-            adres: inv.tenant.property.address1,
             adres_1: inv.tenant.property.address1,
             adres_2: inv.tenant.property.address2 ?? "",
             miesiac: MONTHS_PL[inv.month - 1],
