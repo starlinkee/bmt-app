@@ -10,11 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock } from "lucide-react";
-import { initAndGetTasks, getAllTasks } from "./home-actions";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { initAndGetPageData, getPageData } from "./home-actions";
 
-type Task = Awaited<ReturnType<typeof getAllTasks>>[number];
+type PageData = Awaited<ReturnType<typeof getPageData>>;
 type Filter = "TODO" | "DONE";
 
 const MONTHS_PL = [
@@ -27,16 +28,30 @@ const TASK_LABELS: Record<string, string> = {
   MEDIA: "Wysyłka mediów",
 };
 
+const TASK_HREF: Record<string, string> = {
+  RENT: "/finance",
+  MEDIA: "/media",
+};
+
+const TASK_ACTION: Record<string, string> = {
+  RENT: "Wystaw czynsze",
+  MEDIA: "Wyślij media",
+};
+
+function formatDay(day: number, month: number, year: number) {
+  return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
+}
+
 export default function HomePage() {
   const [filter, setFilter] = useState<Filter>("TODO");
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [data, setData] = useState<PageData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     startTransition(async () => {
-      const data = await initAndGetTasks("TODO");
-      setTasks(data);
+      const result = await initAndGetPageData("TODO");
+      setData(result);
       setInitialized(true);
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -44,8 +59,8 @@ export default function HomePage() {
   useEffect(() => {
     if (!initialized) return;
     startTransition(async () => {
-      const data = await getAllTasks(filter);
-      setTasks(data);
+      const result = await getPageData(filter);
+      setData(result);
     });
   }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -56,6 +71,11 @@ export default function HomePage() {
     month: "long",
     year: "numeric",
   });
+
+  const month = data?.month ?? today.getMonth() + 1;
+  const year = data?.year ?? today.getFullYear();
+
+  const totalCount = (data?.tasks.length ?? 0) + (data?.reminders.length ?? 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,7 +107,7 @@ export default function HomePage() {
 
       {isPending ? (
         <p className="text-muted-foreground text-sm">Ładowanie...</p>
-      ) : tasks.length === 0 ? (
+      ) : totalCount === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
           {filter === "TODO" ? (
             <>
@@ -107,23 +127,20 @@ export default function HomePage() {
           <TableHeader>
             <TableRow>
               <TableHead>Zadanie</TableHead>
-              <TableHead>Miesiąc</TableHead>
-              <TableHead>Utworzono</TableHead>
+              <TableHead>Termin</TableHead>
               <TableHead>Status</TableHead>
               {filter === "DONE" && <TableHead>Ukończono</TableHead>}
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.map((task) => (
-              <TableRow key={task.id}>
+            {data?.tasks.map((task) => (
+              <TableRow key={`task-${task.id}`}>
                 <TableCell className="font-medium">
                   {TASK_LABELS[task.type] ?? task.type}
                 </TableCell>
-                <TableCell>
-                  {MONTHS_PL[task.month - 1]} {task.year}
-                </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  01.{String(task.month).padStart(2, "0")}.{task.year}
+                  {formatDay(1, task.month, task.year)}
                 </TableCell>
                 <TableCell>
                   {task.status === "TODO" ? (
@@ -132,7 +149,7 @@ export default function HomePage() {
                       Do zrobienia
                     </Badge>
                   ) : (
-                    <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700">
+                    <Badge className="gap-1 bg-green-600 hover:bg-green-700">
                       <CheckCircle2 className="h-3 w-3" />
                       Zrobione
                     </Badge>
@@ -149,8 +166,71 @@ export default function HomePage() {
                       : "—"}
                   </TableCell>
                 )}
+                <TableCell className="text-right">
+                  {task.status === "TODO" && TASK_HREF[task.type] && (
+                    <Link
+                      href={TASK_HREF[task.type]}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      {TASK_ACTION[task.type]}
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
+
+            {data?.reminders.map((r) => {
+              const sentThisMonth =
+                r.lastSentAt !== null &&
+                r.lastSentAt >= new Date(year, month - 1, 1);
+              return (
+                <TableRow key={`reminder-${r.id}`}>
+                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDay(r.dayOfMonth, month, year)}{" "}
+                    <span className="text-xs">
+                      {String(r.hour).padStart(2, "0")}:00
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {sentThisMonth ? (
+                      <Badge className="gap-1 bg-green-600 hover:bg-green-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Zrobione
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="gap-1">
+                        <Clock className="h-3 w-3" />
+                        Do zrobienia
+                      </Badge>
+                    )}
+                  </TableCell>
+                  {filter === "DONE" && (
+                    <TableCell className="text-muted-foreground text-sm">
+                      {r.lastSentAt
+                        ? new Date(r.lastSentAt).toLocaleDateString("pl-PL", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })
+                        : "—"}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-right">
+                    {!sentThisMonth && (
+                      <Link
+                        href="/reminders"
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        Przejdź
+                        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Link>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}
