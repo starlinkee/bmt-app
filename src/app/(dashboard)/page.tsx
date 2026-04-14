@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { initAndGetPageData, getPageData } from "./home-actions";
@@ -22,6 +23,10 @@ const MONTHS_PL = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
   "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
 ];
+
+function formatCurrency(n: number) {
+  return n.toLocaleString("pl-PL", { style: "currency", currency: "PLN" });
+}
 
 const TASK_LABELS: Record<string, string> = {
   RENT: "Wystawienie czynszów",
@@ -85,6 +90,41 @@ export default function HomePage() {
           <p className="text-sm text-muted-foreground capitalize">{dateLabel}</p>
         </div>
       </div>
+
+      {data?.stats && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Aktywne umowy
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{data.stats.activeContracts}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Czynsze za {MONTHS_PL[(data.month ?? month) - 1]} {data.year ?? year}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{data.stats.rentsCount}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Suma czynszów
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{formatCurrency(data.stats.rentsTotal)}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="flex gap-2">
         <Button

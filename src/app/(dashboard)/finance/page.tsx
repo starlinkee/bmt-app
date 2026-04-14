@@ -3,7 +3,6 @@
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,7 @@ import {
 import { Receipt, CheckCircle2, AlertCircle, Mail, MailX } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { generateRents, getGeneratedRents, getFinanceStats, getRentPreview } from "./actions";
+import { generateRents, getGeneratedRents, getRentPreview } from "./actions";
 
 const MONTHS = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -42,7 +41,6 @@ function formatCurrency(n: number) {
 }
 
 type RentInvoice = Awaited<ReturnType<typeof getGeneratedRents>>[number];
-type Stats = Awaited<ReturnType<typeof getFinanceStats>>;
 type PreviewTenant = Awaited<ReturnType<typeof getRentPreview>>[number];
 
 export default function FinancePage() {
@@ -50,7 +48,6 @@ export default function FinancePage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [rents, setRents] = useState<RentInvoice[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewTenant[]>([]);
@@ -58,12 +55,8 @@ export default function FinancePage() {
 
   function load() {
     startTransition(async () => {
-      const [r, s] = await Promise.all([
-        getGeneratedRents(month, year),
-        getFinanceStats(),
-      ]);
+      const r = await getGeneratedRents(month, year);
       setRents(r);
-      setStats(s);
     });
   }
 
@@ -97,7 +90,6 @@ export default function FinancePage() {
   }
 
   const yearOptions = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
-  const totalAmount = rents.reduce((sum, r) => sum + r.amount, 0);
   const withEmail = preview.filter((t) => t.email);
   const withoutEmail = preview.filter((t) => !t.email);
 
@@ -164,42 +156,6 @@ export default function FinancePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Stats cards */}
-      {stats && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Aktywne umowy
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{stats.activeContracts}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Czynsze za {MONTHS[month - 1]} {year}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{rents.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Suma czynszów
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Month/year selector + generate button */}
       <Card>
