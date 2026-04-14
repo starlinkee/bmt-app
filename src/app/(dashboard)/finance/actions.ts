@@ -5,6 +5,7 @@ import { sendRentEmail } from "@/lib/email";
 import { writeNamedRanges, exportSheetAsPdf } from "@/lib/sheetsEngine";
 import { amountToWordsPLN } from "@/lib/numberWords";
 import { revalidatePath } from "next/cache";
+import { markMonthlyTaskDone } from "@/lib/tasks";
 
 const MONTHS_PL = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -158,6 +159,11 @@ export async function generateRents(month: number, year: number) {
 
   revalidatePath("/finance");
   revalidatePath("/tenants");
+  revalidatePath("/");
+
+  if (toCreate.length > 0) {
+    await markMonthlyTaskDone("RENT", month, year);
+  }
 
   return {
     created: toCreate.length,

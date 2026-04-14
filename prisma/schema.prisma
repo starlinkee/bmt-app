@@ -135,6 +135,29 @@ model ReminderTenant {
   @@id([reminderId, tenantId])
 }
 
+model MonthlyTask {
+  id          Int            @id @default(autoincrement())
+  type        MonthlyTaskType
+  month       Int
+  year        Int
+  status      MonthlyTaskStatus @default(TODO)
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([type, month, year])
+}
+
+enum MonthlyTaskType {
+  RENT
+  MEDIA
+}
+
+enum MonthlyTaskStatus {
+  TODO
+  DONE
+}
+
 enum InvoiceType {
   RENT
   MEDIA

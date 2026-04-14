@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { href: "/", label: "Strona główna", icon: Home, exact: true },
   { href: "/properties", label: "Nieruchomości", icon: Building2 },
   { href: "/tenants", label: "Najemcy", icon: Users },
   { href: "/contracts", label: "Umowy", icon: FileText },
@@ -51,8 +52,8 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-0.5">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname.startsWith(href);
+          {navItems.map(({ href, label, icon: Icon, exact }) => {
+            const isActive = exact ? pathname === href : pathname.startsWith(href);
             return (
               <li key={href}>
                 <Link

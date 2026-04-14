@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendMediaEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
+import { markMonthlyTaskDone } from "@/lib/tasks";
 import {
   writeInputValues,
   triggerRecalc,
@@ -205,6 +206,11 @@ export async function processSettlement(
 
     revalidatePath(`/media/${groupId}`);
     revalidatePath("/tenants");
+    revalidatePath("/");
+
+    if (created > 0) {
+      await markMonthlyTaskDone("MEDIA", month, year);
+    }
 
     return {
       created,
