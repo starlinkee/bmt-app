@@ -81,6 +81,9 @@ export async function generateRents(month: number, year: number) {
             email: true,
             firstName: true,
             lastName: true,
+            tenantType: true,
+            address1: true,
+            address2: true,
             property: { select: { address1: true, address2: true } },
           },
         },
@@ -116,8 +119,12 @@ export async function generateRents(month: number, year: number) {
           const context: Record<string, string> = {
             numer_rachunku: inv.number,
             najemca: `${inv.tenant.firstName} ${inv.tenant.lastName}`,
-            adres_1: inv.tenant.property.address1,
-            adres_2: inv.tenant.property.address2 ?? "",
+            adres_1: inv.tenant.tenantType === "BUSINESS" && inv.tenant.address1
+              ? inv.tenant.address1
+              : inv.tenant.property.address1,
+            adres_2: inv.tenant.tenantType === "BUSINESS" && inv.tenant.address2
+              ? inv.tenant.address2
+              : (inv.tenant.property.address2 ?? ""),
             miesiac: MONTHS_PL[inv.month - 1],
             rok: inv.year.toString(),
             kwota: inv.amount.toLocaleString("pl-PL", { minimumFractionDigits: 2 }),

@@ -46,6 +46,7 @@ export default function TenantsPage() {
   const [properties, setProperties] = useState<PropertyOption[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
+  const [tenantType, setTenantType] = useState<string>("PRIVATE");
   const [isPending, startTransition] = useTransition();
   const [contractsOpen, setContractsOpen] = useState(false);
   const [contractsTenant, setContractsTenant] = useState<Tenant | null>(null);
@@ -90,11 +91,13 @@ export default function TenantsPage() {
 
   function openEdit(tenant: Tenant) {
     setEditing(tenant);
+    setTenantType(tenant.tenantType ?? "PRIVATE");
     setOpen(true);
   }
 
   function openCreate() {
     setEditing(null);
+    setTenantType("PRIVATE");
     setOpen(true);
   }
 
@@ -123,9 +126,38 @@ export default function TenantsPage() {
             </DialogTitle>
           </DialogHeader>
           <form action={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Typ najemcy</Label>
+              <input type="hidden" name="tenantType" value={tenantType} />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTenantType("PRIVATE")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                    tenantType === "PRIVATE"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background hover:bg-muted"
+                  }`}
+                >
+                  Prywatny
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTenantType("BUSINESS")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                    tenantType === "BUSINESS"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background hover:bg-muted"
+                  }`}
+                >
+                  Firmowy
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="firstName">Imię</Label>
+                <Label htmlFor="firstName">{tenantType === "BUSINESS" ? "Imię / Nazwa firmy" : "Imię"}</Label>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -135,7 +167,7 @@ export default function TenantsPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="lastName">Nazwisko</Label>
+                <Label htmlFor="lastName">{tenantType === "BUSINESS" ? "Nazwisko / cd. nazwy" : "Nazwisko"}</Label>
                 <Input
                   id="lastName"
                   name="lastName"
@@ -168,16 +200,42 @@ export default function TenantsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nip">NIP (opcjonalnie)</Label>
-              <Input
-                id="nip"
-                name="nip"
-                defaultValue={editing?.nip ?? ""}
-                placeholder="np. 1234567890"
-                key={`nip-${editing?.id ?? "new"}`}
-              />
-            </div>
+            {tenantType === "BUSINESS" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="nip">NIP</Label>
+                  <Input
+                    id="nip"
+                    name="nip"
+                    defaultValue={editing?.nip ?? ""}
+                    placeholder="np. 1234567890"
+                    key={`nip-${editing?.id ?? "new"}`}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="address1">Ulica i numer</Label>
+                    <Input
+                      id="address1"
+                      name="address1"
+                      defaultValue={editing?.address1 ?? ""}
+                      placeholder="np. ul. Kwiatowa 5/3"
+                      key={`a1-${editing?.id ?? "new"}`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="address2">Kod i miasto</Label>
+                    <Input
+                      id="address2"
+                      name="address2"
+                      defaultValue={editing?.address2 ?? ""}
+                      placeholder="np. 00-001 Warszawa"
+                      key={`a2-${editing?.id ?? "new"}`}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="propertyId">Nieruchomość</Label>
@@ -261,11 +319,11 @@ export default function TenantsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Imię i nazwisko</TableHead>
+              <TableHead>Typ</TableHead>
               <TableHead>NIP</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Telefon</TableHead>
-              <TableHead>Ulica</TableHead>
-              <TableHead>Kod / Miasto</TableHead>
+              <TableHead>Nieruchomość</TableHead>
               <TableHead className="text-center">Umowy</TableHead>
               <TableHead className="w-24" />
             </TableRow>
@@ -281,17 +339,23 @@ export default function TenantsPage() {
                     {t.firstName} {t.lastName}
                   </Link>
                 </TableCell>
-                <TableCell>{t.nip ?? "—"}</TableCell>
+                <TableCell>
+                  {t.tenantType === "BUSINESS" ? (
+                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                      Firmowy
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                      Prywatny
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>{t.tenantType === "BUSINESS" ? (t.nip ?? "—") : "—"}</TableCell>
                 <TableCell>{t.email ?? "—"}</TableCell>
                 <TableCell>{t.phone ?? "—"}</TableCell>
                 <TableCell>
-                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline">
-                    {t.property.address1}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline">
-                    {t.property.address2 ?? "—"}
+                  <Link href={`/properties?open=${t.propertyId}`} className="hover:underline text-sm">
+                    {t.property.address1}{t.property.address2 ? `, ${t.property.address2}` : ""}
                   </Link>
                 </TableCell>
                 <TableCell className="text-center">

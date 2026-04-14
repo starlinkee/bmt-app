@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Tenant" ADD COLUMN "tenantType" TEXT NOT NULL DEFAULT 'PRIVATE';
+ALTER TABLE "Tenant" ADD COLUMN "address1" TEXT;
+ALTER TABLE "Tenant" ADD COLUMN "address2" TEXT;

@@ -25,12 +25,15 @@ model Property {
 
 model Tenant {
   id                 Int           @id @default(autoincrement())
+  tenantType         String        @default("PRIVATE")
   firstName          String
   lastName           String
   email              String?
   phone              String?
   bankAccountsAsText String        @default("")
   nip                String?
+  address1           String?
+  address2           String?
   propertyId         Int
   property           Property      @relation(fields: [propertyId], references: [id])
   createdAt          DateTime      @default(now())
