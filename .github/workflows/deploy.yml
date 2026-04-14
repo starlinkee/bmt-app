@@ -30,11 +30,11 @@ jobs:
             if [ "$OLD_LOCK" != "$NEW_LOCK" ]; then
               npm ci
             fi
-            # Migrate if schema changed OR if there are unapplied migrations
+            # Always deploy migrations (idempotent - no-op if nothing pending)
+            npx prisma migrate deploy
+            # Regenerate client only if schema changed
             NEW_PRISMA=$(md5sum prisma/schema.prisma 2>/dev/null || echo "changed")
-            PENDING=$(npx prisma migrate status 2>&1 | grep -c "following migration" || true)
-            if [ "$OLD_PRISMA" != "$NEW_PRISMA" ] || [ "$PENDING" -gt "0" ]; then
-              npx prisma migrate deploy
+            if [ "$OLD_PRISMA" != "$NEW_PRISMA" ]; then
               npx prisma generate
             fi
             npm run build
