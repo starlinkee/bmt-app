@@ -52,19 +52,16 @@ function PropertiesPageInner() {
   const [tenantsProperty, setTenantsProperty] = useState<Property | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
 
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+
   function load() {
     startTransition(async () => {
       const data = await getProperties();
       setProperties(data);
-      // Auto-open tenants dialog if ?open=<id> in URL
       const openId = Number(searchParams.get("open"));
-      if (openId) {
-        const prop = data.find((p) => p.id === openId);
-        if (prop) {
-          setTenantsProperty(prop);
-          setTenantsOpen(true);
-          getTenantsByProperty(prop.id).then(setTenants);
-        }
+      if (openId && data.find((p) => p.id === openId)) {
+        setHighlightId(openId);
+        setTimeout(() => setHighlightId(null), 2000);
       }
     });
   }
@@ -243,7 +240,10 @@ function PropertiesPageInner() {
           </TableHeader>
           <TableBody>
             {properties.map((p) => (
-              <TableRow key={p.id}>
+              <TableRow
+                key={p.id}
+                className={highlightId === p.id ? "transition-colors duration-300 bg-yellow-100 dark:bg-yellow-900/30" : "transition-colors duration-1000"}
+              >
                 <TableCell className="font-medium">{p.name || "—"}</TableCell>
                 <TableCell>
                   <div>{p.address1}</div>
