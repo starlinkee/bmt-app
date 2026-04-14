@@ -26,9 +26,9 @@ function buildInvoiceNumber(month: number, year: number, seqNumber: number, type
 }
 
 export async function generateRents(month: number, year: number) {
-  // Get all active contracts with tenant info
+  // Get all active BUSINESS contracts with tenant info (private contracts don't get invoices/emails)
   const activeContracts = await prisma.contract.findMany({
-    where: { isActive: true },
+    where: { isActive: true, contractType: "BUSINESS" },
     include: {
       tenant: {
         select: { id: true, firstName: true, lastName: true },
@@ -181,7 +181,7 @@ export async function generateRents(month: number, year: number) {
 
 export async function getRentPreview(month: number, year: number) {
   const activeContracts = await prisma.contract.findMany({
-    where: { isActive: true },
+    where: { isActive: true, contractType: "BUSINESS" },
     include: {
       tenant: {
         select: { id: true, firstName: true, lastName: true, email: true },

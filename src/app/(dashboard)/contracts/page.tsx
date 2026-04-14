@@ -58,6 +58,7 @@ export default function ContractsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contract | null>(null);
   const [noEndDate, setNoEndDate] = useState(false);
+  const [contractType, setContractType] = useState<"BUSINESS" | "PRIVATE">("BUSINESS");
   const [isPending, startTransition] = useTransition();
 
   function load() {
@@ -100,12 +101,14 @@ export default function ContractsPage() {
   function openEdit(contract: Contract) {
     setEditing(contract);
     setNoEndDate(!contract.endDate);
+    setContractType((contract.contractType as "BUSINESS" | "PRIVATE") ?? "BUSINESS");
     setOpen(true);
   }
 
   function openCreate() {
     setEditing(null);
     setNoEndDate(false);
+    setContractType("BUSINESS");
     setOpen(true);
   }
 
@@ -147,7 +150,25 @@ export default function ContractsPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Typ umowy</Label>
+              <Select
+                name="contractType"
+                value={contractType}
+                onValueChange={(v) => setContractType(v as "BUSINESS" | "PRIVATE")}
+                key={`ct-${editing?.id ?? "new"}`}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BUSINESS">Firmowa (rachunki + e-mail)</SelectItem>
+                  <SelectItem value="PRIVATE">Prywatna (bez rachunków)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className={contractType === "BUSINESS" ? "grid grid-cols-2 gap-4" : ""}>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="rentAmount">Kwota czynszu (PLN)</Label>
                 <Input
@@ -161,20 +182,22 @@ export default function ContractsPage() {
                   key={`ra-${editing?.id ?? "new"}`}
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="invoiceSeqNumber">Nr porządkowy (rachunki)</Label>
-                <Input
-                  id="invoiceSeqNumber"
-                  name="invoiceSeqNumber"
-                  type="number"
-                  min={0}
-                  defaultValue={editing?.invoiceSeqNumber ?? 0}
-                  key={`seq-${editing?.id ?? "new"}`}
-                />
-                <p className="text-xs text-muted-foreground">
-                  np. 1 → /001 czynsz, /010 media
-                </p>
-              </div>
+              {contractType === "BUSINESS" && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="invoiceSeqNumber">Nr porządkowy (rachunki)</Label>
+                  <Input
+                    id="invoiceSeqNumber"
+                    name="invoiceSeqNumber"
+                    type="number"
+                    min={0}
+                    defaultValue={editing?.invoiceSeqNumber ?? 0}
+                    key={`seq-${editing?.id ?? "new"}`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    np. 1 → /001 czynsz, /010 media
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -241,6 +264,7 @@ export default function ContractsPage() {
             <TableRow>
               <TableHead>Najemca</TableHead>
               <TableHead>Nieruchomość</TableHead>
+              <TableHead>Typ</TableHead>
               <TableHead>Czynsz</TableHead>
               <TableHead className="text-center">Nr</TableHead>
               <TableHead>Od</TableHead>
@@ -262,9 +286,16 @@ export default function ContractsPage() {
                     {c.tenant.property.address1}{c.tenant.property.address2 ? `, ${c.tenant.property.address2}` : ""}
                   </Link>
                 </TableCell>
+                <TableCell>
+                  <Badge variant={c.contractType === "BUSINESS" ? "default" : "outline"}>
+                    {c.contractType === "BUSINESS" ? "Firmowa" : "Prywatna"}
+                  </Badge>
+                </TableCell>
                 <TableCell>{formatCurrency(c.rentAmount)}</TableCell>
                 <TableCell className="text-center font-mono text-sm">
-                  {c.invoiceSeqNumber > 0 ? String(c.invoiceSeqNumber).padStart(3, "0") : "—"}
+                  {c.contractType === "BUSINESS" && c.invoiceSeqNumber > 0
+                    ? String(c.invoiceSeqNumber).padStart(3, "0")
+                    : "—"}
                 </TableCell>
                 <TableCell>{formatDate(c.startDate)}</TableCell>
                 <TableCell>{c.endDate ? formatDate(c.endDate) : "—"}</TableCell>
