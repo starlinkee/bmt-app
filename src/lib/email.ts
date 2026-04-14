@@ -96,6 +96,51 @@ export async function sendRentEmail(data: RentEmailData): Promise<boolean> {
   }
 }
 
+// ── REMINDER ─────────────────────────────────────────────────────────────────
+
+export interface ReminderEmailData {
+  to: string;
+  firstName: string;
+  lastName: string;
+  subject: string;
+  body: string;
+}
+
+export async function sendReminderEmail(data: ReminderEmailData): Promise<boolean> {
+  const transporter = createTransporter();
+  if (!transporter) return false;
+
+  // Convert newlines to <br> for HTML
+  const htmlBody = data.body
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+  <p>Dzień dobry <strong>${data.firstName} ${data.lastName}</strong>,</p>
+  <p>${htmlBody}</p>
+  <p style="color:#666;font-size:0.9em;">Z poważaniem,<br>BMT</p>
+</body>
+</html>`;
+
+  try {
+    await transporter.sendMail({
+      from: `BMT <${process.env.GMAIL_USER}>`,
+      to: data.to,
+      subject: data.subject,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error(`[email] Błąd wysyłki przypomnienia do ${data.to}:`, err);
+    return false;
+  }
+}
+
 // ── MEDIA ───────────────────────────────────────────────────────────────────
 
 export interface MediaEmailData {

@@ -36,6 +36,7 @@ model Tenant {
   contracts          Contract[]
   invoices           Invoice[]
   transactions       Transaction[]
+  reminderTenants    ReminderTenant[]
 }
 
 model Contract {
@@ -107,6 +108,29 @@ model AppConfig {
   rentInvoiceSpreadsheetId    String @default("")
   rentInvoiceInputMappingJSON String @default("[]")
   rentInvoicePdfGid           String @default("")
+}
+
+model ReminderSchedule {
+  id         Int              @id @default(autoincrement())
+  name       String
+  dayOfMonth Int
+  hour       Int
+  subject    String
+  body       String
+  isActive   Boolean          @default(true)
+  lastSentAt DateTime?
+  tenants    ReminderTenant[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model ReminderTenant {
+  reminderId Int
+  tenantId   Int
+  reminder   ReminderSchedule @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+
+  @@id([reminderId, tenantId])
 }
 
 enum InvoiceType {

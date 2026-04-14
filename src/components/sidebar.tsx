@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Home,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/contracts", label: "Umowy", icon: FileText },
   { href: "/finance", label: "Wystawienie czynszu", icon: Wallet },
   { href: "/media", label: "Media", icon: Zap },
+  { href: "/reminders", label: "Przypomnienia", icon: Bell },
   { href: "/import", label: "Import CSV", icon: Upload },
   { href: "/settings", label: "Ustawienia", icon: Settings },
 ];
