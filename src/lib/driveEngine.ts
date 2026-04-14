@@ -35,6 +35,8 @@ export async function getOrCreateFolder(name: string, parentId?: string): Promis
     q,
     fields: "files(id, name)",
     spaces: "drive",
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
 
   const existing = res.data.files ?? [];
@@ -49,6 +51,7 @@ export async function getOrCreateFolder(name: string, parentId?: string): Promis
       parents: parentId ? [parentId] : [],
     },
     fields: "id",
+    supportsAllDrives: true,
   });
 
   if (!created.data.id) throw new Error("Nie udało się utworzyć folderu w Drive.");
@@ -92,6 +95,7 @@ export async function uploadPdfToDrive(
       body: stream,
     },
     fields: "id",
+    supportsAllDrives: true,
   });
 
   if (!res.data.id) throw new Error("Nie udało się zapisać pliku w Drive.");
